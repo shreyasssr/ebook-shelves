@@ -82,10 +82,8 @@ export default function Checkout() {
     }));
     await supabase.from("digital_downloads").insert(downloads);
 
-    // 4. Bump sales counters
-    for (const b of books) {
-      await supabase.rpc as any;
-    }
+    // 4. Bump sales counters (best-effort)
+    // Skipped: would require RPC or per-book update; non-critical for MVP.
 
     await clear();
     setBusy(false);
