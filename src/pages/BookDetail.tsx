@@ -27,7 +27,7 @@ export default function BookDetail() {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const { data } = await supabase.from("books").select("*").eq("slug", slug).eq("is_published", true).maybeSingle();
+      const { data } = await supabase.from("books").select("*").eq("slug", slug!).eq("is_published", true).maybeSingle();
       setBook(data);
       if (data) {
         const [{ data: l }, { data: c }] = await Promise.all([
