@@ -1,33 +1,47 @@
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import Layout from "@/components/Layout";
+import Home from "@/pages/Home";
+import Catalog from "@/pages/Catalog";
+import BookDetail from "@/pages/BookDetail";
+import Cart from "@/pages/Cart";
+import Checkout from "@/pages/Checkout";
+import Auth from "@/pages/Auth";
+import Dashboard from "@/pages/Dashboard";
+import { OrdersList, OrderDetail } from "@/pages/Orders";
+import NotFound from "@/pages/NotFound";
 
-function Home() {
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/" className="text-xl font-bold tracking-tight">
-            Digisell <span className="text-primary">Books</span>
-          </Link>
-          <nav className="text-sm text-muted-foreground">Foundation ready</nav>
-        </div>
-      </header>
-      <main className="max-w-3xl mx-auto px-6 py-20 space-y-4">
-        <h1 className="text-4xl font-bold">Digisell Books — foundation laid</h1>
-        <p className="text-muted-foreground">
-          Database schema, RLS, storage buckets, and seed data are live. Framework
-          has been swapped from TanStack Start to Vite + React Router v6. Continue
-          in the next turn to build out Phases 3–11 (auth, catalog, book detail,
-          checkout, dashboard, admin, edge functions).
-        </p>
-      </main>
-    </div>
-  );
-}
+import AdminLayout from "@/pages/admin/AdminLayout";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminBooks from "@/pages/admin/AdminBooks";
+import AdminBookEdit from "@/pages/admin/AdminBookEdit";
+import AdminOrders from "@/pages/admin/AdminOrders";
+import AdminImport from "@/pages/admin/AdminImport";
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-    </Routes>
+    <AuthProvider>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/books" element={<Catalog />} />
+          <Route path="/book/:slug" element={<BookDetail />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/orders" element={<OrdersList />} />
+          <Route path="/order/:id" element={<OrderDetail />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="books" element={<AdminBooks />} />
+          <Route path="books/:id" element={<AdminBookEdit />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="import" element={<AdminImport />} />
+        </Route>
+      </Routes>
+    </AuthProvider>
   );
 }
