@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import { BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -39,29 +41,57 @@ export default function Auth() {
   return (
     <>
       <Helmet><title>Sign in | Digisell Books</title></Helmet>
-      <div className="max-w-md mx-auto px-4 py-16">
-        <h1 className="text-2xl font-bold mb-6 text-center">Welcome to Digisell Books</h1>
-        <Tabs value={tab} onValueChange={(v)=>setTab(v as any)}>
-          <TabsList className="grid grid-cols-2 w-full"><TabsTrigger value="signin">Sign in</TabsTrigger><TabsTrigger value="signup">Create account</TabsTrigger></TabsList>
-          <TabsContent value="signin">
-            <form onSubmit={signin} className="space-y-4 mt-4">
-              <div><Label>Email</Label><Input type="email" required value={email} onChange={(e)=>setEmail(e.target.value)}/></div>
-              <div><Label>Password</Label><Input type="password" required value={password} onChange={(e)=>setPassword(e.target.value)}/></div>
-              <Button type="submit" className="w-full" disabled={busy}>{busy?"Signing in...":"Sign in"}</Button>
-            </form>
-          </TabsContent>
-          <TabsContent value="signup">
-            <form onSubmit={signup} className="space-y-4 mt-4">
-              <div><Label>Full name</Label><Input required value={name} onChange={(e)=>setName(e.target.value)}/></div>
-              <div><Label>Email</Label><Input type="email" required value={email} onChange={(e)=>setEmail(e.target.value)}/></div>
-              <div><Label>Password</Label><Input type="password" required minLength={6} value={password} onChange={(e)=>setPassword(e.target.value)}/></div>
-              <Button type="submit" className="w-full" disabled={busy}>{busy?"Creating...":"Create account"}</Button>
-            </form>
-          </TabsContent>
-        </Tabs>
-        <p className="text-xs text-muted-foreground text-center mt-6">
-          <Link to="/" className="hover:underline">← Back to store</Link>
-        </p>
+      <div className="min-h-[calc(100vh-8rem)] grid md:grid-cols-2">
+        {/* Image side — swap for a real photo of a cozy reading nook */}
+        <div className="hidden md:block relative border-r border-border">
+          <ImagePlaceholder
+            variant="prominent"
+            label="Auth page — a warm reading nook with an open book, tea, and soft lamp light"
+            size="1200×1600"
+          />
+          <div className="absolute inset-x-0 bottom-0 p-8 bg-gradient-to-t from-black/50 to-transparent">
+            <p className="font-display text-white text-2xl italic">
+              "A room without books is like a body without a soul."
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center px-4 py-16">
+          <div className="w-full max-w-sm">
+            <Link to="/" className="flex items-center justify-center gap-2 mb-8">
+              <span className="flex items-center justify-center size-8 rounded-full bg-primary text-primary-foreground">
+                <BookOpen className="size-4" />
+              </span>
+              <span className="font-display font-semibold text-xl">Digisell Books</span>
+            </Link>
+
+            <h1 className="font-display text-2xl font-semibold mb-6 text-center">Welcome back</h1>
+            <Tabs value={tab} onValueChange={(v)=>setTab(v as any)}>
+              <TabsList className="grid grid-cols-2 w-full">
+                <TabsTrigger value="signin">Sign in</TabsTrigger>
+                <TabsTrigger value="signup">Create account</TabsTrigger>
+              </TabsList>
+              <TabsContent value="signin">
+                <form onSubmit={signin} className="space-y-4 mt-4">
+                  <div><Label>Email</Label><Input type="email" required value={email} onChange={(e)=>setEmail(e.target.value)}/></div>
+                  <div><Label>Password</Label><Input type="password" required value={password} onChange={(e)=>setPassword(e.target.value)}/></div>
+                  <Button type="submit" className="w-full" disabled={busy}>{busy?"Signing in...":"Sign in"}</Button>
+                </form>
+              </TabsContent>
+              <TabsContent value="signup">
+                <form onSubmit={signup} className="space-y-4 mt-4">
+                  <div><Label>Full name</Label><Input required value={name} onChange={(e)=>setName(e.target.value)}/></div>
+                  <div><Label>Email</Label><Input type="email" required value={email} onChange={(e)=>setEmail(e.target.value)}/></div>
+                  <div><Label>Password</Label><Input type="password" required minLength={6} value={password} onChange={(e)=>setPassword(e.target.value)}/></div>
+                  <Button type="submit" className="w-full" disabled={busy}>{busy?"Creating...":"Create account"}</Button>
+                </form>
+              </TabsContent>
+            </Tabs>
+            <p className="text-xs text-muted-foreground text-center mt-6">
+              <Link to="/" className="hover:underline">← Back to store</Link>
+            </p>
+          </div>
+        </div>
       </div>
     </>
   );

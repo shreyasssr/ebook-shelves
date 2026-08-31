@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Trash2, ShoppingBag } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
 import { formatINR, effectivePrice } from "@/lib/format";
 
 // BACKEND REMOVED: cart item IDs are still tracked locally (see useCart),
@@ -19,13 +20,15 @@ export default function Cart() {
   return (
     <>
       <Helmet><title>Cart | Digisell Books</title></Helmet>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-        <h1 className="text-3xl font-bold mb-6">Your cart ({count})</h1>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
+        <h1 className="font-display text-3xl font-semibold mb-6">Your cart <span className="text-muted-foreground font-mono text-xl">({count})</span></h1>
 
         {books.length === 0 ? (
-          <div className="text-center py-16 border border-dashed border-border rounded-lg">
-            <ShoppingBag className="size-12 mx-auto text-muted-foreground"/>
-            <p className="mt-4 text-muted-foreground">Your cart is empty.</p>
+          <div className="text-center py-20 border-2 border-dashed border-border rounded-lg">
+            <div className="mx-auto size-14 rounded-full bg-secondary flex items-center justify-center mb-4">
+              <ShoppingBag className="size-6 text-muted-foreground"/>
+            </div>
+            <p className="text-muted-foreground">Your cart is empty.</p>
             <Button asChild className="mt-4"><Link to="/books">Browse books</Link></Button>
           </div>
         ) : (
@@ -33,25 +36,25 @@ export default function Cart() {
             <div className="md:col-span-2 space-y-3">
               {books.map((b) => (
                 <div key={b.id} className="flex gap-4 p-3 border border-border rounded-lg bg-card">
-                  <Link to={`/book/${b.slug}`} className="w-16 h-24 bg-muted rounded overflow-hidden shrink-0">
-                    {b.thumbnail_url && <img src={b.thumbnail_url} alt={b.name} className="w-full h-full object-cover"/>}
+                  <Link to={`/book/${b.slug}`} className="w-16 h-24 rounded overflow-hidden shrink-0">
+                    <ImagePlaceholder src={b.thumbnail_url} alt={b.name} label="Cover" size="128×192" />
                   </Link>
                   <div className="flex-1 min-w-0">
-                    <Link to={`/book/${b.slug}`} className="font-medium hover:text-primary line-clamp-2">{b.name}</Link>
-                    <p className="text-sm text-muted-foreground">{b.author}</p>
-                    <p className="mt-2 font-bold">{formatINR(effectivePrice(b.price, b.discount_price))}</p>
+                    <Link to={`/book/${b.slug}`} className="font-display font-medium hover:text-primary line-clamp-2">{b.name}</Link>
+                    <p className="text-sm text-muted-foreground font-mono">{b.author}</p>
+                    <p className="mt-2 font-mono font-semibold text-primary">{formatINR(effectivePrice(b.price, b.discount_price))}</p>
                   </div>
                   <Button variant="ghost" size="icon" onClick={()=>remove(b.id)}><Trash2 className="size-4"/></Button>
                 </div>
               ))}
             </div>
             <aside className="space-y-4">
-              <div className="border border-border rounded-lg p-4 bg-card">
-                <h2 className="font-semibold mb-3">Order summary</h2>
-                <div className="flex justify-between text-sm mb-2"><span>Subtotal</span><span>{formatINR(total)}</span></div>
+              <div className="border border-border rounded-lg p-5 bg-card">
+                <h2 className="font-display font-medium mb-3">Order summary</h2>
+                <div className="flex justify-between text-sm mb-2"><span>Subtotal</span><span className="font-mono">{formatINR(total)}</span></div>
                 <div className="flex justify-between text-sm mb-2 text-muted-foreground"><span>Delivery</span><span>Instant download</span></div>
-                <div className="border-t border-border my-3"/>
-                <div className="flex justify-between font-bold"><span>Total</span><span>{formatINR(total)}</span></div>
+                <div className="border-t border-dashed border-border my-3"/>
+                <div className="flex justify-between font-semibold"><span>Total</span><span className="font-mono">{formatINR(total)}</span></div>
                 <Button className="w-full mt-4" size="lg" onClick={()=>nav("/checkout")}>Checkout</Button>
               </div>
             </aside>

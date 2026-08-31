@@ -10,6 +10,9 @@ import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
 import { OrdersList, OrderDetail } from "@/pages/Orders";
 import NotFound from "@/pages/NotFound";
+import RefundPolicy from "@/pages/static/RefundPolicy";
+import Terms from "@/pages/static/Terms";
+import Privacy from "@/pages/static/Privacy";
 
 import AdminLayout from "@/pages/admin/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
@@ -31,6 +34,9 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/orders" element={<OrdersList />} />
           <Route path="/order/:id" element={<OrderDetail />} />
+          <Route path="/refund-policy" element={<RefundPolicy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="*" element={<NotFound />} />
         </Route>
         <Route path="/auth" element={<Auth />} />

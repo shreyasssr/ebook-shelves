@@ -102,17 +102,17 @@ export default function Catalog() {
       </Helmet>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div className="flex flex-col md:flex-row gap-6">
+        <div className="flex flex-col md:flex-row gap-8">
 
           {/* ── Sidebar filters ─────────────────────────────────────────────── */}
-          <aside className="md:w-56 shrink-0 space-y-6 text-sm">
+          <aside className="md:w-56 shrink-0 space-y-7 text-sm">
             <div>
-              <div className="font-semibold mb-2">Language</div>
-              <ul className="space-y-1">
+              <div className="font-display font-medium mb-2.5">Language</div>
+              <ul className="space-y-1.5">
                 <li>
                   <button
                     onClick={() => update("lang", "")}
-                    className={!langCode ? "text-primary font-medium" : ""}
+                    className={!langCode ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}
                   >
                     All languages
                   </button>
@@ -123,24 +123,24 @@ export default function Catalog() {
                       onClick={() => update("lang", l.code)}
                       className={
                         langCode === l.code
-                          ? "text-primary font-medium"
+                          ? "text-primary font-semibold"
                           : "text-muted-foreground hover:text-foreground"
                       }
                     >
-                      {l.name} <span className="text-xs">({l.book_count})</span>
+                      {l.name} <span className="text-xs font-mono">({l.book_count})</span>
                     </button>
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div>
-              <div className="font-semibold mb-2">Category</div>
-              <ul className="space-y-1">
+            <div className="border-t border-dashed border-border pt-5">
+              <div className="font-display font-medium mb-2.5">Category</div>
+              <ul className="space-y-1.5">
                 <li>
                   <button
                     onClick={() => update("category", "")}
-                    className={!catSlug ? "text-primary font-medium" : ""}
+                    className={!catSlug ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}
                   >
                     All categories
                   </button>
@@ -151,7 +151,7 @@ export default function Catalog() {
                       onClick={() => update("category", c.slug)}
                       className={
                         catSlug === c.slug
-                          ? "text-primary font-medium"
+                          ? "text-primary font-semibold"
                           : "text-muted-foreground hover:text-foreground"
                       }
                     >
@@ -165,11 +165,11 @@ export default function Catalog() {
 
           {/* ── Main content ─────────────────────────────────────────────────── */}
           <div className="flex-1">
-            <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-              <h1 className="text-2xl font-bold">
+            <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
+              <h1 className="font-display text-2xl font-semibold">
                 {title}
                 {totalCount != null && (
-                  <span className="text-muted-foreground text-sm font-normal ml-2">
+                  <span className="text-muted-foreground text-sm font-normal font-mono ml-2">
                     ({totalCount})
                   </span>
                 )}
@@ -180,7 +180,7 @@ export default function Catalog() {
                   value={sort}
                   onValueChange={(v) => update("sort", v === "popular" ? "" : v)}
                 >
-                  <SelectTrigger className="w-40">
+                  <SelectTrigger className="w-44">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -196,12 +196,12 @@ export default function Catalog() {
             {loading && books.length === 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="aspect-[2/3] bg-muted rounded animate-pulse" />
+                  <div key={i} className="aspect-[2/3] bg-muted rounded-md animate-pulse" />
                 ))}
               </div>
             ) : books.length === 0 ? (
-              <div className="text-center py-20 text-muted-foreground">
-                No books found. Try a different filter.
+              <div className="border border-dashed border-border rounded-lg py-16 text-center text-sm text-muted-foreground">
+                No books found. Try a different filter, or check back once the catalog is populated.
               </div>
             ) : (
               <>
