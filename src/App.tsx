@@ -23,6 +23,7 @@ import AdminImport from "@/pages/admin/AdminImport";
 import AdminReports from "@/pages/admin/AdminReports";
 import AdminImportHistory from "@/pages/admin/AdminImportHistory";
 import AdminEmailTemplates from "@/pages/admin/AdminEmailTemplates";
+import AdminAuth from "@/pages/admin/AdminAuth";
 
 export default function App() {
   return (
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Route>
         <Route path="/auth" element={<Auth />} />
+        <Route path="/admin/login" element={<AdminAuth />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="books" element={<AdminBooks />} />
