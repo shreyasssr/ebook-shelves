@@ -37,6 +37,9 @@ export interface BookFilters {
   languageId?: string;
   categoryId?: string;
   sort?:       "popular" | "newest" | "price-asc" | "price-desc";
+  minPrice?:   number;
+  maxPrice?:   number;
+  searchTerm?: string;
 }
 
 export function usePaginatedBooks(

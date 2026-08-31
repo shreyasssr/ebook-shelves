@@ -20,6 +20,9 @@ import AdminBooks from "@/pages/admin/AdminBooks";
 import AdminBookEdit from "@/pages/admin/AdminBookEdit";
 import AdminOrders from "@/pages/admin/AdminOrders";
 import AdminImport from "@/pages/admin/AdminImport";
+import AdminReports from "@/pages/admin/AdminReports";
+import AdminImportHistory from "@/pages/admin/AdminImportHistory";
+import AdminEmailTemplates from "@/pages/admin/AdminEmailTemplates";
 
 export default function App() {
   return (
@@ -45,7 +48,10 @@ export default function App() {
           <Route path="books" element={<AdminBooks />} />
           <Route path="books/:id" element={<AdminBookEdit />} />
           <Route path="orders" element={<AdminOrders />} />
+          <Route path="reports" element={<AdminReports />} />
           <Route path="import" element={<AdminImport />} />
+          <Route path="import-history" element={<AdminImportHistory />} />
+          <Route path="email-templates" element={<AdminEmailTemplates />} />
         </Route>
       </Routes>
     </AuthProvider>

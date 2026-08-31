@@ -1,6 +1,6 @@
 import { Link, NavLink, Outlet, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, BookOpen, ShoppingBag, Upload } from "lucide-react";
+import { LayoutDashboard, BookOpen, ShoppingBag, Upload, BarChart3, History, Mail } from "lucide-react";
 
 export default function AdminLayout() {
   const { user, isAdmin, loading } = useAuth();
@@ -16,7 +16,10 @@ export default function AdminLayout() {
     { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
     { to: "/admin/books", label: "Books", icon: BookOpen },
     { to: "/admin/orders", label: "Orders", icon: ShoppingBag },
+    { to: "/admin/reports", label: "Reports", icon: BarChart3 },
     { to: "/admin/import", label: "Bulk import", icon: Upload },
+    { to: "/admin/import-history", label: "Import History", icon: History },
+    { to: "/admin/email-templates", label: "Email Templates", icon: Mail },
   ];
 
   return (

@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { toCsv, downloadCsv } from "@/lib/csvExport";
+
+type FailedRow = {
+  rowNumber: number;
+  data: Record<string, string>;
+  reason: string;
+};
 
 function parseCsv(text: string): Record<string, string>[] {
   const lines = text.replace(/\r/g, "").split("\n").filter(l => l.trim().length > 0);
@@ -22,12 +29,11 @@ function parseCsv(text: string): Record<string, string>[] {
   return lines.slice(1).map(l => { const v = split(l); const o: any = {}; headers.forEach((h, i) => o[h] = (v[i] ?? "").trim()); return o; });
 }
 
-const slugify = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^\w\s-]/g,"").trim().replace(/\s+/g,"-").slice(0,100);
-
 export default function AdminImport() {
   const { user } = useAuth();
   const [busy, setBusy] = useState(false);
-  const [progress, setProgress] = useState({ done: 0, total: 0, ok: 0, err: 0, errors: [] as string[] });
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [progress, setProgress] = useState({ done: 0, total: 0, ok: 0, err: 0, errors: [] as FailedRow[] });
 
   const downloadTemplate = () => {
     const headers = "name,author,slug,description,long_description,price,discount_price,language_code,category_slug,isbn,publisher,published_year,page_count,thumbnail_url,file_url,is_published";
@@ -36,23 +42,45 @@ export default function AdminImport() {
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "books-template.csv"; a.click();
   };
 
-  // BACKEND REMOVED: this used to look up language/category IDs, create a
-  // bulk_import_jobs row, upsert each parsed row into `books`, and update
-  // the job with results — all against Supabase. No backend is connected,
-  // so the CSV is still parsed (to validate the file client-side and show
-  // row counts) but nothing is written anywhere.
   const importFile = async (file: File) => {
     if (!user) return;
     setBusy(true);
     const text = await file.text();
     const rows = parseCsv(text);
     if (rows.length === 0) { toast.error("Empty CSV"); setBusy(false); return; }
+    
+    const fileHeaders = Object.keys(rows[0]);
+    setHeaders(fileHeaders);
 
-    setProgress({ done: 0, total: rows.length, ok: 0, err: rows.length, errors: [
-      "Import is unavailable — no backend is connected. The CSV was parsed but nothing was saved.",
-    ] });
+    const failedRows: FailedRow[] = rows.map((row, i) => ({
+      rowNumber: i + 1,
+      data: row,
+      reason: "Import is unavailable — no backend is connected. The CSV was parsed but nothing was saved."
+    }));
+
+    setProgress({ 
+      done: rows.length, 
+      total: rows.length, 
+      ok: 0, 
+      err: rows.length, 
+      errors: failedRows 
+    });
     setBusy(false);
     toast.error("Import is unavailable — no backend is connected.");
+  };
+
+  const downloadFailedRows = () => {
+    if (!progress.errors.length) return;
+    
+    const exportHeaders = [...headers, "error_reason"];
+    const exportRows = progress.errors.map(err => {
+      const rowValues = headers.map(h => err.data[h] ?? "");
+      return [...rowValues, err.reason];
+    });
+
+    const csvContent = toCsv(exportHeaders, exportRows);
+    const dateStr = new Date().toISOString().split('T')[0];
+    downloadCsv(`import-errors-${dateStr}.csv`, csvContent);
   };
 
   return (
@@ -71,16 +99,27 @@ export default function AdminImport() {
       {progress.total > 0 && (
         <div className="mt-6 space-y-3">
           <Progress value={(progress.done/progress.total)*100}/>
-          <div className="text-sm flex gap-6">
+          <div className="text-sm flex gap-6 items-center">
             <span>Processed: {progress.done}/{progress.total}</span>
             <span className="text-green-600">Success: {progress.ok}</span>
             <span className="text-destructive">Errors: {progress.err}</span>
+            {progress.errors.length > 0 && (
+              <Button size="sm" variant="secondary" onClick={downloadFailedRows} className="ml-auto">
+                Download failed rows
+              </Button>
+            )}
           </div>
           {progress.errors.length > 0 && (
             <details className="border border-border rounded p-3 bg-muted/50">
-              <summary className="cursor-pointer text-sm font-medium">View errors ({progress.errors.length})</summary>
-              <ul className="text-xs mt-2 space-y-1 max-h-60 overflow-auto">
-                {progress.errors.map((e,i)=><li key={i} className="text-destructive">{e}</li>)}
+              <summary className="cursor-pointer text-sm font-medium">
+                View errors ({progress.errors.length})
+              </summary>
+              <ul className="text-xs mt-4 space-y-1 max-h-60 overflow-auto">
+                {progress.errors.map((e,i)=> (
+                  <li key={i} className="text-destructive">
+                    Row {e.rowNumber} ({e.data.name || "unknown"}): {e.reason}
+                  </li>
+                ))}
               </ul>
             </details>
           )}
