@@ -1,30 +1,34 @@
-# EbookStore (TanStack / Vite React App)
+# EbookStore (PocketBase / React / Vite)
 
-Welcome to the **EbookStore** project! This repository contains a modern web application built using **React 19**, **Vite**, **TypeScript**, and **Tailwind CSS**.
+Welcome to the **EbookStore** project! This repository contains a modern web application built using **React 19**, **Vite**, **TypeScript**, and **Tailwind CSS**, fully powered by a **PocketBase** backend.
 
-> **No backend is currently connected.** This project previously used
-> Supabase, Firebase, and Algolia; all three were removed. Auth, the book
-> catalog, cart persistence-to-server, checkout, order history, and the
-> admin dashboards are present as UI shells but do not fetch or write any
-> real data until a backend is wired back up. See `CLEANUP_PROMPT.md` for
-> what was removed and why, and `PROJECT_IDEAS.md` for what to build next.
+> **Backend Status: PocketBase is fully connected.** 
+> Auth, the book catalog, checkout (via secure server-side hooks), order history, and the complete Admin dashboard are now wired up natively to PocketBase.
 
 ---
 
-## 🚀 Features
+## Features
 
 - **Framework**: React 19 + TypeScript
 - **Build Tool**: Vite
 - **Styling**: Tailwind CSS + Radix UI components (shadcn/ui setup)
 - **Icons**: Lucide React
-- **Backend / Database**: none currently — see note above
-- **State Management & Data Fetching**: TanStack React Query
+- **Backend / Database**: PocketBase (SQLite, Go)
+- **Secure File Delivery**: Native PocketBase hooks generating secure token-based download URLs for eBooks.
 
 ---
 
-## 🛠️ Getting Started
+## Getting Started
 
-### 1. Install Dependencies
+### 1. Backend Setup (PocketBase)
+
+Download [PocketBase](https://pocketbase.io/), place the binary in the project root, and run:
+```bash
+./pocketbase serve
+```
+Then, go to `http://localhost:8090/_/` (Admin UI) -> Settings -> Sync -> **Import collections** and upload the `pb_schema.json` file to provision the database schema.
+
+### 2. Frontend Setup
 
 ```bash
 npm install
