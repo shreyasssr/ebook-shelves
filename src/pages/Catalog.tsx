@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Filter, X } from "lucide-react";
+import { pb } from "@/lib/pocketbase";
 import { usePaginatedBooks, type BookFilters } from "@/lib/pagination";
 import { type BookCardData }                   from "@/components/BookCard";
 import BookCard                                from "@/components/BookCard";
@@ -83,10 +84,26 @@ export default function Catalog() {
     }
   }, [localMin, localMax]);
 
-  // BACKEND REMOVED: ...
-  const langs: { id: string; code: string; name: string; book_count: number }[] = [];
-  const cats:  { id: string; name: string; slug: string }[] = [];
-  const relatedBooks: BookCardData[] = []; // BACKEND REMOVED: Should fetch up to 6 related books here
+  // Fetch langs and cats
+  const [langs, setLangs] = useState<{ id: string; code: string; name: string; book_count: number }[]>([]);
+  const [cats, setCats] = useState<{ id: string; name: string; slug: string }[]>([]);
+  const [relatedBooks, setRelatedBooks] = useState<BookCardData[]>([]);
+
+  useEffect(() => {
+    async function loadMeta() {
+      try {
+        const [langsRes, catsRes] = await Promise.all([
+          pb.collection("languages").getFullList({ filter: "is_active=true", sort: "display_order" }),
+          pb.collection("categories").getFullList({ sort: "name" })
+        ]);
+        setLangs(langsRes.map(l => ({ ...l, book_count: l.book_count || 0 })) as any[]);
+        setCats(catsRes as any[]);
+      } catch (err) {
+        console.error("Failed to load catalog metadata", err);
+      }
+    }
+    loadMeta();
+  }, []);
 
   const langId = langs.find((l) => l.code === langCode)?.id ?? "";
   const catId  = cats.find((c)  => c.slug  === catSlug)?.id  ?? "";
@@ -116,15 +133,31 @@ export default function Catalog() {
     searchTerm: debouncedQ || undefined,
   };
 
-  const { books, loading, hasMore, loadMore } = usePaginatedBooks(filters, PAGE_SIZE);
+  const { books, loading, hasMore, loadMore, totalCount } = usePaginatedBooks(filters, PAGE_SIZE);
 
-  const totalCount: number | undefined = undefined;
+  // Fetch related books if exactly one lang or cat is selected and not searching
+  const showRelated = !isSearchMode && (langCode || catSlug);
+  
+  useEffect(() => {
+    async function loadRelated() {
+      if (!showRelated || books.length === 0) return;
+      try {
+        const firstBook = books[0];
+        const res = await pb.collection("books").getList(1, 6, {
+          filter: `is_published=true && language="${firstBook.language}" && id!="${firstBook.id}"`,
+        });
+        setRelatedBooks(res.items as unknown as BookCardData[]);
+      } catch (err) {
+        console.error("Failed to load related books", err);
+      }
+    }
+    loadRelated();
+  }, [showRelated, books]);
 
   const langName = langs.find((l) => l.code === langCode)?.name;
   const catName  = cats.find((c)  => c.slug  === catSlug)?.name;
   const title    = debouncedQ ? `"${debouncedQ}"` : langName || catName || "All books";
 
-  const showRelated = !isSearchMode && (langCode || catSlug);
   const pageNum = Math.ceil(books.length / PAGE_SIZE) || 1;
 
   const SidebarContent = () => (

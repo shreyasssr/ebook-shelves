@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { toCsv, downloadCsv } from "@/lib/csvExport";
+import { pb } from "@/lib/pocketbase";
 
 type FailedRow = {
   rowNumber: number;
@@ -36,8 +37,8 @@ export default function AdminImport() {
   const [progress, setProgress] = useState({ done: 0, total: 0, ok: 0, err: 0, errors: [] as FailedRow[] });
 
   const downloadTemplate = () => {
-    const headers = "name,author,slug,description,long_description,price,discount_price,language_code,category_slug,isbn,publisher,published_year,page_count,thumbnail_url,file_url,is_published";
-    const sample = `Sample Book,John Doe,sample-book,A short description,A long description here,199,149,en,fiction,978-XYZ,Some Press,2024,250,https://example.com/cover.jpg,ebooks/sample.pdf,true`;
+    const headers = "name,author,slug,description,long_description,price,discount_price,language_code,category_slug,isbn,publisher,published_year,page_count,is_published";
+    const sample = `Sample Book,John Doe,sample-book,A short description,A long description here,199,149,en,fiction,978-XYZ,Some Press,2024,250,true`;
     const blob = new Blob([headers + "\n" + sample], { type: "text/csv" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "books-template.csv"; a.click();
   };
@@ -52,21 +53,74 @@ export default function AdminImport() {
     const fileHeaders = Object.keys(rows[0]);
     setHeaders(fileHeaders);
 
-    const failedRows: FailedRow[] = rows.map((row, i) => ({
-      rowNumber: i + 1,
-      data: row,
-      reason: "Import is unavailable — no backend is connected. The CSV was parsed but nothing was saved."
-    }));
+    setProgress({ done: 0, total: rows.length, ok: 0, err: 0, errors: [] });
+    
+    // Pre-fetch taxonomies
+    const [langs, cats] = await Promise.all([
+      pb.collection("languages").getFullList(),
+      pb.collection("categories").getFullList()
+    ]);
+    
+    let ok = 0;
+    let err = 0;
+    const errors: FailedRow[] = [];
 
-    setProgress({ 
-      done: rows.length, 
-      total: rows.length, 
-      ok: 0, 
-      err: rows.length, 
-      errors: failedRows 
-    });
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      try {
+        const lang = langs.find(l => l.code === row.language_code);
+        const cat = cats.find(c => c.slug === row.category_slug);
+        
+        if (!lang) throw new Error(`Unknown language_code: ${row.language_code}`);
+        
+        const data = {
+          name: row.name,
+          slug: row.slug || row.name.toLowerCase().replace(/\s+/g, '-'),
+          author: row.author,
+          description: row.description,
+          long_description: row.long_description,
+          price: Number(row.price),
+          discount_price: row.discount_price ? Number(row.discount_price) : null,
+          language: lang.id,
+          category: cat ? cat.id : null,
+          isbn: row.isbn,
+          publisher: row.publisher,
+          published_year: row.published_year ? Number(row.published_year) : null,
+          page_count: row.page_count ? Number(row.page_count) : null,
+          is_published: row.is_published === 'true'
+        };
+
+        // If slug exists, update, else create. But for simple import, we just try to find by slug
+        let existing;
+        try { existing = await pb.collection("books").getFirstListItem(`slug="${data.slug}"`); } catch (_) {}
+        
+        if (existing) {
+          await pb.collection("books").update(existing.id, data);
+        } else {
+          await pb.collection("books").create(data);
+        }
+        ok++;
+      } catch (e: any) {
+        err++;
+        errors.push({ rowNumber: i + 1, data: row, reason: e.message || "Failed" });
+      }
+      setProgress(p => ({ ...p, done: i + 1, ok, err, errors }));
+    }
+
+    try {
+      await pb.collection("bulk_import_jobs").create({
+        filename: file.name,
+        total_rows: rows.length,
+        success_rows: ok,
+        error_rows: err,
+        error_log: errors
+      });
+    } catch(e) {
+      console.error("Failed to save job record", e);
+    }
+
     setBusy(false);
-    toast.error("Import is unavailable — no backend is connected.");
+    toast.success("Import complete.");
   };
 
   const downloadFailedRows = () => {

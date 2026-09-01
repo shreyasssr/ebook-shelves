@@ -1,22 +1,45 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Receipt, Download } from "lucide-react";
+import { Receipt, Download, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatINR } from "@/lib/format";
-
-// BACKEND REMOVED: ...
+import { pb } from "@/lib/pocketbase";
 
 export function OrdersList() {
   const { user } = useAuth();
-  const orders: any[] = []; // Unfiltered
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   
   const [statusFilter, setStatusFilter] = useState<"all"|"paid"|"pending"|"failed">("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
+  useEffect(() => {
+    async function loadOrders() {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const res = await pb.collection("orders").getFullList({
+          filter: `user="${user.id}"`,
+          sort: "-created"
+        });
+        setOrders(res);
+      } catch (err) {
+        console.error("Failed to load orders", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadOrders();
+  }, [user]);
+
+  if (loading) return <div className="p-24 flex justify-center"><Loader2 className="animate-spin text-primary size-8" /></div>;
 
   if (!user) return (
     <div className="max-w-md mx-auto px-4 py-24 text-center">
@@ -30,7 +53,7 @@ export function OrdersList() {
 
   const filteredOrders = orders.filter(o => {
     if (statusFilter !== "all" && o.status !== statusFilter) return false;
-    const orderDate = new Date(o.created_at).getTime();
+    const orderDate = new Date(o.created).getTime();
     if (startDate && orderDate < new Date(startDate).getTime()) return false;
     if (endDate && orderDate > new Date(endDate).getTime() + 86400000) return false;
     return true;
@@ -45,11 +68,11 @@ export function OrdersList() {
         <h1 className="font-display text-3xl font-semibold mb-6">Your orders</h1>
         
         <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {["all", "paid", "pending", "failed"].map(s => (
               <Button
                 key={s}
-                variant={statusFilter === s ? "default" : "secondary"}
+                variant={statusFilter === s ? "default" : "outline"}
                 size="sm"
                 onClick={() => setStatusFilter(s as any)}
                 className="capitalize"
@@ -58,51 +81,48 @@ export function OrdersList() {
               </Button>
             ))}
           </div>
+          
           <div className="flex items-center gap-2">
-            <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="h-9 w-36 text-xs font-mono" />
-            <span className="text-muted-foreground">—</span>
-            <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="h-9 w-36 text-xs font-mono" />
+            <Input type="date" className="h-9" value={startDate} onChange={e=>setStartDate(e.target.value)} />
+            <span className="text-muted-foreground text-sm">to</span>
+            <Input type="date" className="h-9" value={endDate} onChange={e=>setEndDate(e.target.value)} />
           </div>
         </div>
 
-        {orders.length === 0 ? (
-          <div className="text-center py-20 border-2 border-dashed border-border rounded-lg">
-            <div className="mx-auto size-14 rounded-full bg-secondary flex items-center justify-center mb-4">
-              <Receipt className="size-6 text-muted-foreground" />
-            </div>
-            <p className="text-muted-foreground font-medium">No orders yet.</p>
-            <Button asChild className="mt-4"><Link to="/books">Browse books</Link></Button>
-          </div>
-        ) : filteredOrders.length === 0 ? (
-          <div className="text-center py-20 border-2 border-dashed border-border rounded-lg bg-card/50">
-            <div className="mx-auto size-14 rounded-full bg-secondary flex items-center justify-center mb-4 opacity-50">
-              <Receipt className="size-6 text-muted-foreground" />
-            </div>
-            <p className="text-muted-foreground font-medium">No orders match your current filters.</p>
-            <Button 
-              variant="outline" 
-              className="mt-4"
-              onClick={() => { setStatusFilter("all"); setStartDate(""); setEndDate(""); }}
-            >
-              Clear filters
-            </Button>
+        {filteredOrders.length === 0 ? (
+          <div className="border border-dashed border-border rounded-lg bg-card py-20 text-center text-muted-foreground">
+            {isFiltered ? "No orders match these filters." : "You haven't placed any orders yet."}
           </div>
         ) : (
-          <div className="space-y-3">
-            {filteredOrders.map((o)=>(
-              <Link key={o.id} to={`/order/${o.id}`} className="block p-4 border border-border rounded-lg bg-card hover:border-primary transition-colors">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <div className="font-mono text-xs text-muted-foreground mb-1">#{o.id.slice(0,8)}</div>
-                    <div className="text-sm font-medium">{new Date(o.created_at).toLocaleString()}</div>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant={o.status==="paid"?"default":"secondary"}>{o.status}</Badge>
-                    <div className="font-mono font-semibold mt-2">{formatINR(o.total_amount)}</div>
-                  </div>
-                </div>
-              </Link>
-            ))}
+          <div className="border border-border rounded-lg overflow-hidden bg-card">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-secondary/50 text-muted-foreground font-medium border-b border-border">
+                <tr>
+                  <th className="px-4 py-3 font-normal">Order</th>
+                  <th className="px-4 py-3 font-normal">Date</th>
+                  <th className="px-4 py-3 font-normal">Status</th>
+                  <th className="px-4 py-3 font-normal text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filteredOrders.map(o => (
+                  <tr key={o.id} className="hover:bg-muted/50 transition-colors">
+                    <td className="px-4 py-3">
+                      <Link to={`/order/${o.id}`} className="font-mono text-primary hover:underline">
+                        {o.id}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3">{new Date(o.created).toLocaleDateString()}</td>
+                    <td className="px-4 py-3">
+                      <Badge variant={o.status === "paid" ? "default" : "secondary"}>
+                        {o.status}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono font-medium">{formatINR(o.total_amount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
@@ -112,89 +132,112 @@ export function OrdersList() {
 
 export function OrderDetail() {
   const { id } = useParams();
+  const { user } = useAuth();
+  
+  const [order, setOrder] = useState<any>(null);
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  // BACKEND REMOVED: 
-  const order: any = null;
-  const order_items: any[] = []; 
+  useEffect(() => {
+    async function loadOrder() {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const orderData = await pb.collection("orders").getOne(id!);
+        const itemsData = await pb.collection("order_items").getFullList({ filter: `order="${id}"` });
+        setOrder(orderData);
+        setItems(itemsData);
+      } catch (err) {
+        console.error(err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadOrder();
+  }, [id, user]);
 
-  if (!order) {
-    return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
-        <Link to="/orders" className="text-sm text-muted-foreground hover:text-foreground mb-8 inline-block">← All orders</Link>
-        <div className="text-center py-16 border-2 border-dashed border-border rounded-lg bg-card/50">
-          <p className="text-muted-foreground font-mono">Order "{id}" not found.</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <div className="p-24 flex justify-center"><Loader2 className="animate-spin text-primary size-8" /></div>;
+
+  if (error || !order) return (
+    <div className="max-w-md mx-auto px-4 py-24 text-center">
+      <h1 className="font-display text-2xl font-semibold mb-2">Order not found</h1>
+      <p className="text-muted-foreground mb-6">We couldn't find order <span className="font-mono">{id}</span>.</p>
+      <Button asChild><Link to="/orders">Back to orders</Link></Button>
+    </div>
+  );
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
-      <Link to="/orders" className="text-sm text-muted-foreground hover:text-foreground mb-6 inline-block">← All orders</Link>
-      
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <h1 className="font-display text-3xl font-semibold mb-2">Order {id?.slice(0, 8)}</h1>
-          <p className="text-muted-foreground font-mono text-sm">
-            Placed on {new Date(order.created_at).toLocaleString()}
-          </p>
+    <>
+      <Helmet><title>Order {order.id} | Digisell Books</title></Helmet>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+        <Link to="/orders" className="text-sm text-muted-foreground hover:text-primary mb-6 inline-block">
+          &larr; Back to all orders
+        </Link>
+        
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-border pb-6 mb-6">
+          <div>
+            <h1 className="font-display text-3xl font-semibold mb-1">Order {order.id}</h1>
+            <p className="text-muted-foreground">Placed on {new Date(order.created).toLocaleDateString()}</p>
+          </div>
+          <div className="flex gap-2 items-center">
+            <Badge variant={order.status === "paid" ? "default" : "secondary"} className="text-sm">
+              {order.status}
+            </Badge>
+            <Button variant="outline" size="sm" disabled>
+              <Download className="size-4 mr-2" /> Invoice (Coming Soon)
+            </Button>
+          </div>
         </div>
-        <div className="text-right flex flex-col items-end gap-3">
-          <Badge variant={order.status === "paid" ? "default" : "secondary"}>{order.status}</Badge>
-          <div className="text-xs text-muted-foreground">Paid via {order.payment_method || "Unknown"}</div>
-        </div>
-      </div>
 
-      <div className="border border-border rounded-lg bg-card overflow-hidden">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-muted text-muted-foreground">
-            <tr>
-              <th className="p-4 font-medium">Item</th>
-              <th className="p-4 font-medium text-right">Price</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {order_items.length === 0 ? (
+        <div className="border border-border rounded-lg overflow-hidden bg-card mb-8">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-secondary/50 text-muted-foreground border-b border-border">
               <tr>
-                <td colSpan={2} className="p-8 text-center text-muted-foreground">
-                  No line items found.
-                </td>
+                <th className="px-4 py-3 font-normal">Item</th>
+                <th className="px-4 py-3 font-normal text-right">Price</th>
               </tr>
-            ) : (
-              order_items.map((item, i) => (
-                <tr key={i}>
-                  <td className="p-4">
-                    <div className="font-display font-medium mb-1">{item.book_name}</div>
-                    <div className="text-xs text-muted-foreground font-mono">{item.author}</div>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {items.map(item => (
+                <tr key={item.id}>
+                  <td className="px-4 py-3">
+                    <div className="font-medium text-foreground">{item.book_name}</div>
+                    <div className="text-muted-foreground text-xs">{item.author}</div>
                   </td>
-                  <td className="p-4 text-right font-mono">
-                    {formatINR(item.unit_price)}
-                  </td>
+                  <td className="px-4 py-3 text-right font-mono">{formatINR(item.unit_price)}</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-          <tfoot className="bg-muted/50">
-            <tr>
-              <td className="p-4 font-semibold">Total</td>
-              <td className="p-4 text-right font-mono font-bold text-base">
-                {formatINR(order.total_amount)}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+              ))}
+            </tbody>
+            <tfoot className="border-t border-border bg-secondary/20">
+              <tr>
+                <td className="px-4 py-3 text-right font-medium text-muted-foreground">Total</td>
+                <td className="px-4 py-3 text-right font-mono font-semibold text-primary">{formatINR(order.total_amount)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
 
-      <div className="mt-8 flex justify-end">
-        <div className="group relative inline-block">
-          <Button disabled variant="outline">
-            <Download className="size-4 mr-2" /> Download invoice
-          </Button>
-          <div className="absolute bottom-full right-0 mb-2 hidden w-48 rounded bg-popover p-2 text-xs text-popover-foreground shadow-md group-hover:block text-center border border-border">
-            Invoices aren't available yet.
+        <div className="grid sm:grid-cols-2 gap-6 p-6 border border-border rounded-lg bg-card/50 text-sm">
+          <div>
+            <h3 className="font-semibold text-foreground mb-3">Payment Details</h3>
+            <div className="space-y-1 text-muted-foreground">
+              <p>Method: <span className="capitalize text-foreground">{order.payment_method}</span></p>
+              {order.payment_reference_id && <p>Reference: <span className="font-mono text-foreground">{order.payment_reference_id}</span></p>}
+            </div>
+          </div>
+          <div>
+            <h3 className="font-semibold text-foreground mb-3">Customer Details</h3>
+            <div className="space-y-1 text-muted-foreground">
+              <p>{order.customer_name}</p>
+              <p>{order.customer_email}</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

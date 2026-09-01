@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
+import { pb } from "@/lib/pocketbase";
+
 export default function AdminAuth() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -25,14 +27,17 @@ export default function AdminAuth() {
     }
   }, [user, navigate, redirect]);
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    // BACKEND REMOVED: Sign-in is inert.
-    setTimeout(() => {
+    try {
+      await pb.collection("users").authWithPassword(email, password);
+      // Wait for auth context to update and trigger the effect above
+    } catch (err: any) {
+      toast.error(err.message || "Invalid credentials.");
+    } finally {
       setBusy(false);
-      toast.error("Sign-in is unavailable — no backend is connected.");
-    }, 500);
+    }
   };
 
   return (

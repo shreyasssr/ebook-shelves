@@ -1,13 +1,35 @@
+import { useEffect, useState } from "react";
 import { formatINR } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { toCsv, downloadCsv } from "@/lib/csvExport";
+import { pb } from "@/lib/pocketbase";
 
-// BACKEND REMOVED: these stats used to be aggregated from Supabase
-// (books/orders/profiles counts + revenue sum). No backend is connected,
-// so every card shows a zero/empty value rather than fake numbers.
 export default function AdminDashboard() {
-  const stats = { books: 0, orders: 0, revenue: 0, users: 0 };
+  const [stats, setStats] = useState({ books: 0, orders: 0, revenue: 0, users: 0 });
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const [bRes, oRes, uRes] = await Promise.all([
+          pb.collection("books").getList(1, 1, { filter: "is_published=true" }),
+          pb.collection("orders").getFullList({ filter: "status='paid'" }),
+          pb.collection("users").getList(1, 1)
+        ]);
+        const revenue = oRes.reduce((acc, o) => acc + (o.total_amount || 0), 0);
+        setStats({
+          books: bRes.totalItems,
+          orders: oRes.length,
+          revenue,
+          users: uRes.totalItems
+        });
+      } catch (err) {
+        console.error("Failed to load dashboard stats", err);
+      }
+    }
+    loadStats();
+  }, []);
+
   const cards = [
     { label: "Total books", value: stats.books },
     { label: "Completed orders", value: stats.orders },

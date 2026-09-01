@@ -10,6 +10,8 @@ import ImagePlaceholder from "@/components/ImagePlaceholder";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
+import { pb } from "@/lib/pocketbase";
+
 export default function Auth() {
   const nav = useNavigate();
   const [params] = useSearchParams();
@@ -23,19 +25,36 @@ export default function Auth() {
 
   useEffect(() => { if (user) nav(redirect, { replace: true }); }, [user, redirect, nav]);
 
-  // BACKEND REMOVED: sign-in/sign-up used to call Supabase Auth. No backend
-  // is currently connected, so these are inert — the form renders but
-  // cannot actually authenticate anyone.
   const signin = async (e: React.FormEvent) => {
-    e.preventDefault(); setBusy(true);
-    setBusy(false);
-    toast.error("Sign-in is unavailable — no backend is connected.");
+    e.preventDefault(); 
+    setBusy(true);
+    try {
+      await pb.collection("users").authWithPassword(email, password);
+      // user effect will redirect
+    } catch (err: any) {
+      toast.error(err.message || "Invalid credentials.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const signup = async (e: React.FormEvent) => {
-    e.preventDefault(); setBusy(true);
-    setBusy(false);
-    toast.error("Account creation is unavailable — no backend is connected.");
+    e.preventDefault(); 
+    setBusy(true);
+    try {
+      await pb.collection("users").create({
+        email,
+        password,
+        passwordConfirm: password,
+        full_name: name
+      });
+      // automatically sign in after signup
+      await pb.collection("users").authWithPassword(email, password);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to create account.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (

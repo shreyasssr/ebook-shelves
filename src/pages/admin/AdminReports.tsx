@@ -1,13 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toCsv, downloadCsv } from "@/lib/csvExport";
 import { Download } from "lucide-react";
 import { formatINR } from "@/lib/format";
-
-// BACKEND REMOVED: 
-// Real implementation should query orders grouped by day within the selected date range.
-// Specifically: sums of total_amount and count of order_items for each date.
+import { pb } from "@/lib/pocketbase";
 
 export default function AdminReports() {
   const [startDate, setStartDate] = useState(() => {
@@ -20,8 +17,52 @@ export default function AdminReports() {
     return new Date().toISOString().split("T")[0];
   });
 
-  // Empty array as per prompt (stub data since no backend)
-  const reportData: { date: string; orders: number; revenue: number; books_sold: number }[] = [];
+  const [reportData, setReportData] = useState<{ date: string; orders: number; revenue: number; books_sold: number }[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    async function loadReport() {
+      if (!startDate || !endDate) return;
+      setLoading(true);
+      try {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+
+        // A full application might use a custom endpoint or view for this.
+        // For now we'll fetch orders in range and group in memory.
+        const orders = await pb.collection("orders").getFullList({
+          filter: `created >= "${start.toISOString().replace('T',' ')}" && created <= "${end.toISOString().replace('T',' ')}" && status="paid"`,
+          expand: "order_items_via_order"
+        });
+
+        const groups: Record<string, { orders: number; revenue: number; books_sold: number }> = {};
+        orders.forEach(o => {
+          const date = o.created.split(" ")[0]; // Assuming format 'YYYY-MM-DD HH:MM:SS.sssZ'
+          if (!groups[date]) groups[date] = { orders: 0, revenue: 0, books_sold: 0 };
+          groups[date].orders += 1;
+          groups[date].revenue += o.total_amount || 0;
+          
+          // Count books
+          const items = o.expand?.order_items_via_order || [];
+          groups[date].books_sold += items.length; // assuming 1 per item row
+        });
+
+        const sortedDates = Object.keys(groups).sort((a,b) => b.localeCompare(a));
+        setReportData(sortedDates.map(date => ({
+          date,
+          orders: groups[date].orders,
+          revenue: groups[date].revenue,
+          books_sold: groups[date].books_sold
+        })));
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadReport();
+  }, [startDate, endDate]);
 
   const handleExport = () => {
     const headers = ["Date", "Orders", "Revenue", "Books sold"];

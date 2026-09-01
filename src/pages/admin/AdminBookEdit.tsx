@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,36 +7,104 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { pb } from "@/lib/pocketbase";
 
 const slugify = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^\w\s-]/g,"").trim().replace(/\s+/g,"-").slice(0,100);
 
-// BACKEND REMOVED: this form used to load languages/categories, load an
-// existing book by id, upload files to Supabase Storage, and insert/update
-// the `books` table. No backend is connected — the form still renders and
-// is fully editable in local state, but "Upload" and "Save book" are inert.
 export default function AdminBookEdit() {
   const { id } = useParams();
   const isNew = id === "new";
   const nav = useNavigate();
   const [book, setBook] = useState<any>({
     name: "", slug: "", author: "", description: "", long_description: "",
-    price: 99, discount_price: null, language_id: "", category_id: null,
-    thumbnail_url: "", file_url: "", is_published: false,
+    price: 99, discount_price: null, language: "", category: null,
+    is_published: false,
     isbn: "", publisher: "", published_year: null, page_count: null, edition: "",
   });
-  const langs: any[] = [];
-  const cats: any[] = [];
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [ebookFile, setEbookFile] = useState<File | null>(null);
+  
+  const [langs, setLangs] = useState<any[]>([]);
+  const [cats, setCats] = useState<any[]>([]);
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(!isNew);
 
-  const upload = async (file: File, bucket: "ebooks"|"book-assets") => {
-    toast.error("File upload is unavailable — no backend is connected.");
-    return null;
-  };
+  useEffect(() => {
+    async function init() {
+      try {
+        const [lRes, cRes] = await Promise.all([
+          pb.collection("languages").getFullList({ sort: "display_order" }),
+          pb.collection("categories").getFullList({ sort: "name" })
+        ]);
+        setLangs(lRes);
+        setCats(cRes);
+        
+        if (!isNew) {
+          const rec = await pb.collection("books").getOne(id!);
+          setBook(rec);
+        }
+      } catch (err) {
+        toast.error("Failed to load resources");
+      } finally {
+        setLoading(false);
+      }
+    }
+    init();
+  }, [id, isNew]);
 
   const save = async () => {
-    setBusy(false);
-    toast.error("Saving is unavailable — no backend is connected.");
+    setBusy(true);
+    try {
+      const formData = new FormData();
+      Object.keys(book).forEach(k => {
+        if (k === 'id' || k === 'created' || k === 'updated' || k === 'collectionId' || k === 'collectionName' || k === 'thumbnail') return;
+        if (book[k] !== null && book[k] !== undefined && book[k] !== '') {
+          formData.append(k, book[k]);
+        }
+      });
+
+      if (thumbnailFile) {
+        formData.append("thumbnail", thumbnailFile);
+      }
+
+      let bookId = id;
+      if (isNew) {
+        const res = await pb.collection("books").create(formData);
+        bookId = res.id;
+        toast.success("Book created");
+      } else {
+        await pb.collection("books").update(id!, formData);
+        toast.success("Book updated");
+      }
+
+      if (ebookFile && bookId) {
+        const bfData = new FormData();
+        bfData.append("book", bookId);
+        bfData.append("ebook_file", ebookFile);
+        
+        // Find existing book_file if editing
+        let existingBf = null;
+        if (!isNew) {
+           const bfs = await pb.collection("book_files").getFullList({ filter: `book="${bookId}"` });
+           if (bfs.length > 0) existingBf = bfs[0];
+        }
+
+        if (existingBf) {
+           await pb.collection("book_files").update(existingBf.id, bfData);
+        } else {
+           await pb.collection("book_files").create(bfData);
+        }
+      }
+
+      nav("/admin/books");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save book");
+    } finally {
+      setBusy(false);
+    }
   };
+
+  if (loading) return <div className="p-8">Loading...</div>;
 
   return (
     <div>
@@ -47,13 +115,13 @@ export default function AdminBookEdit() {
         <div><Label>Author *</Label><Input value={book.author||""} onChange={(e)=>setBook({...book, author:e.target.value})}/></div>
         <div><Label>ISBN</Label><Input value={book.isbn||""} onChange={(e)=>setBook({...book, isbn:e.target.value})}/></div>
         <div><Label>Language *</Label>
-          <Select value={book.language_id||""} onValueChange={(v)=>setBook({...book, language_id:v})}>
+          <Select value={book.language||""} onValueChange={(v)=>setBook({...book, language:v})}>
             <SelectTrigger><SelectValue placeholder="Select"/></SelectTrigger>
             <SelectContent>{langs.map((l)=><SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div><Label>Category</Label>
-          <Select value={book.category_id||""} onValueChange={(v)=>setBook({...book, category_id:v||null})}>
+          <Select value={book.category||""} onValueChange={(v)=>setBook({...book, category:v||null})}>
             <SelectTrigger><SelectValue placeholder="None"/></SelectTrigger>
             <SelectContent>{cats.map((c)=><SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
           </Select>
@@ -71,18 +139,18 @@ export default function AdminBookEdit() {
         <div className="md:col-span-2 border border-border rounded p-4">
           <Label>Thumbnail (public)</Label>
           <div className="flex gap-3 items-center mt-2">
-            <Input type="file" accept="image/*" onChange={async(e)=>{ const f=e.target.files?.[0]; if(!f) return; const url=await upload(f,"book-assets"); if(url) setBook({...book, thumbnail_url:url}); }}/>
-            {book.thumbnail_url && <img src={book.thumbnail_url} className="w-12 h-16 object-cover rounded"/>}
+            <Input type="file" accept="image/*" onChange={(e)=>{ const f=e.target.files?.[0]; if(f) setThumbnailFile(f); }}/>
+            {book.thumbnail && !thumbnailFile && <img src={pb.files.getUrl(book, book.thumbnail)} className="w-12 h-16 object-cover rounded"/>}
+            {thumbnailFile && <span className="text-xs text-muted-foreground truncate">{thumbnailFile.name} (pending upload)</span>}
           </div>
-          <Input className="mt-2" placeholder="Or paste URL" value={book.thumbnail_url||""} onChange={(e)=>setBook({...book, thumbnail_url:e.target.value})}/>
         </div>
         <div className="md:col-span-2 border border-border rounded p-4">
           <Label>PDF file (private)</Label>
           <div className="flex gap-3 items-center mt-2">
-            <Input type="file" accept="application/pdf" onChange={async(e)=>{ const f=e.target.files?.[0]; if(!f) return; const path=await upload(f,"ebooks"); if(path){ setBook({...book, file_url:path}); toast.success("PDF uploaded"); } }}/>
-            {book.file_url && <span className="text-xs text-muted-foreground truncate">{book.file_url}</span>}
+            <Input type="file" accept="application/pdf" onChange={(e)=>{ const f=e.target.files?.[0]; if(f) setEbookFile(f); }}/>
+            {ebookFile && <span className="text-xs text-muted-foreground truncate">{ebookFile.name} (pending upload)</span>}
           </div>
-          <Input className="mt-2" placeholder="Or storage path (e.g. ebooks/my.pdf)" value={book.file_url||""} onChange={(e)=>setBook({...book, file_url:e.target.value})}/>
+          <p className="text-xs text-muted-foreground mt-2">Note: Existing PDF file path is hidden for security. Uploading a new one replaces the old one.</p>
         </div>
 
         <div className="md:col-span-2 flex items-center gap-3">

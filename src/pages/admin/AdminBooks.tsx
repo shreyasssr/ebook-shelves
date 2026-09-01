@@ -1,21 +1,36 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit } from "lucide-react";
 import { formatINR } from "@/lib/format";
+import { pb } from "@/lib/pocketbase";
 
-// BACKEND REMOVED: this table used to list/search books from Supabase.
-// No backend is connected — the list is always empty and "Search" is inert.
 export default function AdminBooks() {
-  const books: any[] = [];
+  const [books, setBooks] = useState<any[]>([]);
   const [q, setQ] = useState("");
-  const loading = false;
+  const [loading, setLoading] = useState(false);
 
   const load = async () => {
-    // No-op: nothing to fetch without a backend.
+    setLoading(true);
+    try {
+      const res = await pb.collection("books").getList(1, 50, {
+        filter: q ? `name ~ "${q}"` : "",
+        sort: "-created",
+        expand: "language,category"
+      });
+      setBooks(res.items);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    load();
+  }, []);
 
   return (
     <>

@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Tag, ShoppingBag } from "lucide-react";
+import { Tag, ShoppingBag, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
@@ -10,28 +10,44 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { formatINR, effectivePrice } from "@/lib/format";
 import { toast } from "sonner";
+import { pb } from "@/lib/pocketbase";
 
-// BACKEND REMOVED: this page used to (1) prefill contact details from the
-// signed-in user's `profiles` row, (2) resolve cart book IDs into full
-// book records, and (3) place the order via the `place-order` edge
-// function, which recomputed pricing server-side. No backend is
-// connected, so book lookup always returns empty (falling through to the
-// existing "cart is empty" state) and the submit handler is inert.
 export default function Checkout() {
-  const { loading: authLoading } = useAuth();
-  useCart(); // cart id tracking still works locally; book resolution below does not
+  const { user, loading: authLoading } = useAuth();
+  const { bookIds, clear } = useCart();
   const nav = useNavigate();
-  const books: any[] = [];
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  
+  const [books, setBooks] = useState<any[]>([]);
+  const [loadingBooks, setLoadingBooks] = useState(false);
+
+  const [name, setName] = useState((user as any)?.name || (user as any)?.full_name || "");
+  const [email, setEmail] = useState(user?.email || "");
   const [method, setMethod] = useState<"razorpay"|"cod">("razorpay");
   const [promo, setPromo] = useState("");
   const [busy, setBusy] = useState(false);
 
+  useEffect(() => {
+    async function loadCartBooks() {
+      if (bookIds.length === 0) {
+        setBooks([]);
+        return;
+      }
+      setLoadingBooks(true);
+      try {
+        const filterStr = bookIds.map(id => `id="${id}"`).join(" || ");
+        const res = await pb.collection("books").getFullList({ filter: filterStr });
+        setBooks(res);
+      } catch (err) {
+        console.error("Failed to load cart books", err);
+      } finally {
+        setLoadingBooks(false);
+      }
+    }
+    loadCartBooks();
+  }, [bookIds]);
+
   const total = books.reduce((s, b) => s + Number(effectivePrice(b.price, b.discount_price)), 0);
 
-  // Promo codes aren't implemented yet (see PROJECT_IDEAS.md §5.4) — this
-  // is UI-only for now, styled in so the flow reads naturally end to end.
   const applyPromo = (e: React.FormEvent) => {
     e.preventDefault();
     toast.error("Promo codes aren't available yet.");
@@ -39,11 +55,33 @@ export default function Checkout() {
 
   const place = async (e: React.FormEvent) => {
     e.preventDefault();
-    setBusy(false);
-    toast.error("Checkout is unavailable — no backend is connected.");
+    if (!user) {
+        toast.error("You must be signed in to place an order.");
+        nav("/auth?redirect=/checkout");
+        return;
+    }
+
+    setBusy(true);
+    try {
+      const res = await pb.send("/api/place-order", {
+        method: "POST",
+        body: {
+          book_ids: bookIds,
+          customer_name: name,
+          customer_email: email,
+          payment_method: method
+        }
+      });
+      await clear();
+      nav(`/order/${res.order_id}`);
+    } catch (err: any) {
+      toast.error(err.message || "Checkout failed");
+    } finally {
+      setBusy(false);
+    }
   };
 
-  if (authLoading) return <div className="p-8">Loading...</div>;
+  if (authLoading || loadingBooks) return <div className="p-24 flex justify-center"><Loader2 className="animate-spin text-primary size-8" /></div>;
   if (books.length === 0) return (
     <div className="max-w-md mx-auto px-4 py-24 text-center">
       <div className="mx-auto size-14 rounded-full bg-secondary flex items-center justify-center mb-5">

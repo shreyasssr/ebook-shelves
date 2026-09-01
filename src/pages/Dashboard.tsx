@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Download, BookOpen, Search } from "lucide-react";
+import { Download, BookOpen, Search, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ImagePlaceholder from "@/components/ImagePlaceholder";
 import { toast } from "sonner";
+import { pb } from "@/lib/pocketbase";
 import {
   Select,
   SelectContent,
@@ -24,23 +25,73 @@ type DLItem = {
   expires_at: string;
   is_active: boolean;
   book: { name: string; author: string; slug: string; thumbnail_url: string | null } | null;
-  order: { created_at: string; total_amount: number; status: string } | null;
+  order: { created: string; total_amount: number; status: string } | null;
 };
 
-// BACKEND REMOVED: ...
 export default function Dashboard() {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"recent" | "az" | "expiring">("recent");
 
-  const items: DLItem[] = [];
+  const [items, setItems] = useState<DLItem[]>([]);
+  const [loadingItems, setLoadingItems] = useState(true);
+
+  useEffect(() => {
+    async function loadDownloads() {
+      if (!user) return;
+      try {
+        const records = await pb.collection("digital_downloads").getFullList({
+          filter: `user="${user.id}"`,
+          expand: "book,order"
+        });
+        
+        const formatted = records.map(r => ({
+          id: r.id,
+          book_id: r.book,
+          order_id: r.order,
+          download_count: r.download_count,
+          max_downloads: r.max_downloads,
+          expires_at: r.expires_at,
+          is_active: r.is_active,
+          book: r.expand?.book ? { 
+            name: r.expand.book.name, 
+            author: r.expand.book.author, 
+            slug: r.expand.book.slug, 
+            thumbnail_url: r.expand.book.thumbnail ? pb.files.getUrl(r.expand.book, r.expand.book.thumbnail) : null
+          } : null,
+          order: r.expand?.order ? { 
+            created: r.expand.order.created, 
+            total_amount: r.expand.order.total_amount, 
+            status: r.expand.order.status 
+          } : null
+        }));
+        
+        setItems(formatted);
+      } catch (err) {
+        console.error("Failed to load downloads", err);
+      } finally {
+        setLoadingItems(false);
+      }
+    }
+    loadDownloads();
+  }, [user]);
 
   const download = async (item: DLItem) => {
-    toast.error("Download is unavailable — no backend is connected.");
+    try {
+      const res = await pb.send("/api/generate-download-url", {
+        method: "POST",
+        body: { download_id: item.id }
+      });
+      // Increment locally to reflect UI state
+      setItems(prev => prev.map(i => i.id === item.id ? { ...i, download_count: i.download_count + 1 } : i));
+      window.open(res.url, "_blank");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to generate download link");
+    }
   };
 
-  if (loading) return <div className="p-8">Loading...</div>;
+  if (authLoading || loadingItems) return <div className="p-24 flex justify-center"><Loader2 className="animate-spin text-primary size-8" /></div>;
   if (!user) return <div className="p-8">Please <Link to="/auth" className="text-primary">sign in</Link>.</div>;
 
   // Filter client-side
@@ -63,8 +114,8 @@ export default function Dashboard() {
       return new Date(a.expires_at).getTime() - new Date(b.expires_at).getTime();
     } else {
       // default: recent
-      const dateA = new Date(a.order?.created_at || 0).getTime();
-      const dateB = new Date(b.order?.created_at || 0).getTime();
+      const dateA = new Date(a.order?.created || 0).getTime();
+      const dateB = new Date(b.order?.created || 0).getTime();
       return dateB - dateA; // descending
     }
   });
@@ -74,11 +125,11 @@ export default function Dashboard() {
   const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
   
   const recentItems = sorted.filter(it => {
-    const createdAt = new Date(it.order?.created_at || 0).getTime();
+    const createdAt = new Date(it.order?.created || 0).getTime();
     return now - createdAt <= sevenDaysMs;
   });
   const olderItems = sorted.filter(it => {
-    const createdAt = new Date(it.order?.created_at || 0).getTime();
+    const createdAt = new Date(it.order?.created || 0).getTime();
     return now - createdAt > sevenDaysMs;
   });
 

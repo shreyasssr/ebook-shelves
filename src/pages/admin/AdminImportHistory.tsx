@@ -1,14 +1,27 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toCsv, downloadCsv } from "@/lib/csvExport";
-
-// BACKEND REMOVED: 
-// Real implementation should persist a job record (filename, timestamp, row counts, 
-// and the structured FailedRow[] as JSON) each time AdminImport.tsx's importFile runs.
-// This page should list those records most-recent-first.
+import { pb } from "@/lib/pocketbase";
 
 export default function AdminImportHistory() {
-  // Empty array as per prompt (stub data since no backend)
-  const history: any[] = [];
+  const [history, setHistory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await pb.collection("bulk_import_jobs").getFullList({ sort: "-created" });
+        setHistory(res);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  if (loading) return <div className="p-8 text-muted-foreground">Loading...</div>;
 
   return (
     <>
@@ -36,14 +49,33 @@ export default function AdminImportHistory() {
             ) : (
               history.map((job, i) => (
                 <tr key={i} className="border-t border-border">
-                  <td className="p-3">{job.date}</td>
+                  <td className="p-3">{new Date(job.created).toLocaleDateString()}</td>
                   <td className="p-3">{job.filename}</td>
-                  <td className="p-3">{job.totalRows}</td>
-                  <td className="p-3 text-green-600">{job.succeeded}</td>
-                  <td className="p-3 text-destructive">{job.failed}</td>
+                  <td className="p-3">{job.total_rows}</td>
+                  <td className="p-3 text-green-600">{job.success_rows}</td>
+                  <td className="p-3 text-destructive">{job.error_rows}</td>
                   <td className="p-3 text-right">
-                    {job.failed > 0 && (
-                      <Button variant="link" size="sm" onClick={() => {}}>
+                    {job.error_rows > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const log = job.error_log || [];
+                          if (log.length === 0) return;
+                          
+                          const allKeys = new Set<string>();
+                          log.forEach((err: any) => Object.keys(err.data).forEach(k => allKeys.add(k)));
+                          const headers = [...Array.from(allKeys), "error_reason"];
+                          
+                          const rows = log.map((err: any) => [
+                            ...Array.from(allKeys).map(k => err.data[k] ?? ""),
+                            err.reason
+                          ]);
+                          
+                          const csv = toCsv(headers, rows);
+                          downloadCsv(`failed-rows-${job.filename}.csv`, csv);
+                        }}
+                      >
                         Download failed rows
                       </Button>
                     )}

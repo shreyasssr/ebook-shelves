@@ -1,19 +1,26 @@
 import { Link } from "react-router-dom";
+import { pb } from "@/lib/pocketbase";
 import { formatINR, effectivePrice, discountPct } from "@/lib/format";
 import ImagePlaceholder from "@/components/ImagePlaceholder";
 
 export type BookCardData = {
   id: string;
+  collectionId?: string;
   slug: string;
   name: string;
   author: string;
   price: number;
   discount_price: number | null;
-  thumbnail_url: string | null;
+  thumbnail: string | null;
 };
 
 export default function BookCard({ book }: { book: BookCardData }) {
   const pct = discountPct(book.price, book.discount_price);
+  
+  // Create a minimal record-like object for pb.files.getUrl
+  const coverUrl = book.thumbnail && book.collectionId 
+    ? pb.files.getUrl({ id: book.id, collectionId: book.collectionId }, book.thumbnail)
+    : undefined;
   return (
     <Link
       to={`/book/${book.slug}`}
@@ -25,7 +32,7 @@ export default function BookCard({ book }: { book: BookCardData }) {
       <div className="aspect-[2/3] relative overflow-hidden bg-muted">
         <div className="absolute inset-y-0 left-0 w-2 bg-black/10 z-10" />
         <ImagePlaceholder
-          src={book.thumbnail_url ?? undefined}
+          src={coverUrl}
           alt={book.name}
           label={`Cover — "${book.name}"`}
           size="600×900"

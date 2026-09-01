@@ -1,26 +1,44 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import BookCard, { BookCardData } from "@/components/BookCard";
 import ImagePlaceholder from "@/components/ImagePlaceholder";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Quote, Globe2, ShieldCheck, Download } from "lucide-react";
+import { pb } from "@/lib/pocketbase";
 
-// BACKEND REMOVED: featured books, languages, and categories used to be
-// fetched from Supabase. No backend is connected, so these render as
-// empty states below rather than fake/mock data.
 export default function Home() {
-  const featured: BookCardData[] = [];
-  const langs: { id: string; code: string; name: string; native_name?: string; book_count: number }[] = [];
-  const categories: { id: string; name: string; slug: string }[] = [];
+  const [featured, setFeatured] = useState<BookCardData[]>([]);
+  const [langs, setLangs] = useState<{ id: string; code: string; name: string; native_name?: string; book_count: number }[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([]);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [booksRes, langsRes, catsRes] = await Promise.all([
+          pb.collection("books").getList(1, 12, { filter: "is_published=true", sort: "-sales_count" }),
+          pb.collection("languages").getFullList({ filter: "is_active=true", sort: "display_order" }),
+          pb.collection("categories").getFullList({ sort: "name" })
+        ]);
+
+        setFeatured(booksRes.items as unknown as BookCardData[]);
+        setLangs(langsRes.map((l: any) => ({ ...l, book_count: l.book_count || 0 }))); // book_count might need a custom view or hook in future
+        setCategories(catsRes as any[]);
+      } catch (err) {
+        console.error("Failed to fetch home data", err);
+      }
+    }
+    loadData();
+  }, []);
 
   return (
     <>
       <Helmet>
-        <title>Digisell Books — PDF ebooks in Hindi, English, Marathi & more</title>
+        <title>Digisell Books | PDF ebooks in Hindi, English, Marathi & more</title>
         <meta name="description" content="Buy and instantly download PDF ebooks across 6+ Indian languages. 5,000+ titles in fiction, self-help, biography, education, and more." />
       </Helmet>
 
-      {/* ── Hero ─────────────────────────────────────────────────────────────── */}
+      {/* Hero */}
       <section className="relative overflow-hidden border-b border-border bg-secondary/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-24 grid md:grid-cols-2 gap-10 items-center">
           <div>
@@ -38,157 +56,138 @@ export default function Home() {
               A curated PDF ebook shop in Hindi, English, Marathi, Gujarati,
               Bengali, Tamil — and growing.
             </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Button asChild size="lg"><Link to="/books">Browse all books</Link></Button>
-              <Button asChild size="lg" variant="outline"><Link to="/books?sort=newest">New arrivals</Link></Button>
+            <div className="mt-8 flex gap-3">
+              <Button size="lg" asChild className="h-12 px-8 text-base">
+                <Link to="/books">Browse the stacks</Link>
+              </Button>
             </div>
           </div>
-
-          {/* Hero image — swap the placeholder for a real photo/illustration */}
-          <div className="relative aspect-[4/3] rounded-lg overflow-hidden border border-border shadow-[6px_6px_0_0_var(--color-brass)]">
+          <div className="relative aspect-[4/3] rounded-lg overflow-hidden border border-border bg-muted rotate-1 hover:rotate-0 transition-transform duration-500 shadow-xl">
             <ImagePlaceholder
               variant="prominent"
-              label="Hero image — warm, cluttered independent bookshop interior with stacked colorful book spines, soft window light"
+              label="A diverse shelf of beautifully bound books"
               size="1600×1200"
             />
           </div>
         </div>
       </section>
 
-      {/* ── Trust strip ──────────────────────────────────────────────────────── */}
-      <section className="border-b border-border bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm">
-          <div className="flex items-center gap-3">
-            <Download className="size-5 text-primary shrink-0" />
-            <span>Instant PDF delivery, no waiting</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Globe2 className="size-5 text-primary shrink-0" />
-            <span>6+ Indian languages, growing weekly</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="size-5 text-primary shrink-0" />
-            <span>Lifetime access to everything you buy</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Languages ────────────────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
-        <p className="font-mono text-xs uppercase tracking-widest text-brass-foreground mb-1">Shelf by shelf</p>
-        <h2 className="font-display text-2xl font-semibold mb-5">Browse by language</h2>
-        {langs.length === 0 && (
-          <p className="text-sm text-muted-foreground">No languages available yet — check back soon.</p>
-        )}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-          {langs.map((l) => (
-            <Link
-              key={l.id}
-              to={`/books?lang=${l.code}`}
-              className="group rounded-md overflow-hidden border border-border bg-card hover:shadow-md transition"
-            >
-              <div className="aspect-[4/3]">
-                <ImagePlaceholder
-                  label={`${l.name} language tile — an open book cover in ${l.name} script`}
-                  size="400×300"
-                />
-              </div>
-              <div className="p-3">
-                <div className="font-display font-medium group-hover:text-primary">{l.native_name || l.name}</div>
-                <div className="text-xs text-muted-foreground font-mono">{l.book_count} books</div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Bestsellers ──────────────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div className="flex items-baseline justify-between mb-5">
+      {/* Featured shelf */}
+      <section className="py-16 md:py-24 max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="flex items-end justify-between mb-8">
           <div>
-            <p className="font-mono text-xs uppercase tracking-widest text-brass-foreground mb-1">Reader favorites</p>
-            <h2 className="font-display text-2xl font-semibold">Bestsellers</h2>
+            <h2 className="font-display text-3xl font-semibold">Bestsellers</h2>
+            <p className="text-muted-foreground mt-2 font-mono text-sm">Most downloaded this month</p>
           </div>
-          <Link to="/books" className="text-sm text-primary hover:underline font-medium">View all →</Link>
+          <Link to="/books?sort=popular" className="hidden sm:block text-sm font-semibold hover:text-primary transition-colors">
+            See all →
+          </Link>
         </div>
+
         {featured.length === 0 ? (
-          <div className="border border-dashed border-border rounded-lg py-14 text-center text-sm text-muted-foreground">
-            No books published yet — once your catalog is live, bestsellers will appear here.
+          <div className="border border-dashed border-border rounded-lg bg-card/50 py-16 text-center">
+            <p className="text-muted-foreground">Once backend data is restored, featured books will appear here.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {featured.map((b) => <BookCard key={b.id} book={b} />)}
-          </div>
-        )}
-      </section>
-
-      {/* ── Promo banner ─────────────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div className="relative rounded-lg overflow-hidden border border-border grid md:grid-cols-2 min-h-[280px]">
-          <div className="aspect-[4/3] md:aspect-auto">
-            <ImagePlaceholder
-              variant="prominent"
-              label="Promo banner — a person reading an ebook on a tablet in a cozy corner, warm tones"
-              size="1200×900"
-            />
-          </div>
-          <div className="bg-primary text-primary-foreground p-8 md:p-10 flex flex-col justify-center">
-            <p className="font-mono text-xs uppercase tracking-widest text-brass mb-2">Limited time</p>
-            <h3 className="font-display text-3xl font-semibold mb-3">Monsoon Reading Sale</h3>
-            <p className="text-primary-foreground/80 mb-6 max-w-sm">
-              Up to 40% off across Fiction and Self-Help, this week only.
-            </p>
-            <div>
-              <Button asChild variant="secondary" size="lg">
-                <Link to="/books?category=fiction">Shop the sale</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Categories ───────────────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
-        <p className="font-mono text-xs uppercase tracking-widest text-brass-foreground mb-1">Find your next read</p>
-        <h2 className="font-display text-2xl font-semibold mb-5">Browse by category</h2>
-        {categories.length === 0 && (
-          <p className="text-sm text-muted-foreground">No categories available yet.</p>
-        )}
-        <div className="flex flex-wrap gap-2">
-          {categories.map((c) => (
-            <Link
-              key={c.id}
-              to={`/books?category=${c.slug}`}
-              className="px-4 py-2 rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground text-sm font-medium transition"
-            >
-              {c.name}
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Testimonials ─────────────────────────────────────────────────────── */}
-      <section className="border-t border-border bg-secondary/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
-          <p className="font-mono text-xs uppercase tracking-widest text-brass-foreground mb-1 text-center">What readers say</p>
-          <h2 className="font-display text-2xl font-semibold mb-8 text-center">Loved by readers everywhere</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { name: "Ananya R.", quote: "Found Marathi titles here I couldn't find anywhere else. Download was instant." },
-              { name: "Vikram S.", quote: "The Hindi self-help section alone was worth signing up for." },
-              { name: "Fatima K.", quote: "Simple checkout, and my library page keeps everything organized." },
-            ].map((t) => (
-              <div key={t.name} className="bg-card border border-border rounded-lg p-6 relative">
-                <Quote className="size-6 text-brass mb-3" />
-                <p className="text-sm text-foreground/90 mb-4">"{t.quote}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="size-9 rounded-full overflow-hidden shrink-0">
-                    <ImagePlaceholder label={`Avatar — ${t.name}`} size="100×100" />
-                  </div>
-                  <span className="text-sm font-medium font-mono">{t.name}</span>
-                </div>
-              </div>
+            {featured.map((b) => (
+              <BookCard key={b.id} book={b} />
             ))}
+          </div>
+        )}
+      </section>
+
+      {/* Categories & Languages */}
+      <section className="border-t border-border bg-secondary/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-24 grid md:grid-cols-2 gap-16">
+          {/* Languages */}
+          <div>
+            <h2 className="font-display text-2xl font-semibold mb-6 flex items-center gap-2">
+              <Globe2 className="size-6 text-muted-foreground" /> Shop by language
+            </h2>
+            {langs.length === 0 ? (
+              <p className="text-muted-foreground text-sm">Languages currently unavailable.</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {langs.map((l) => (
+                  <Link
+                    key={l.id}
+                    to={`/books?lang=${l.code}`}
+                    className="flex justify-between items-center p-3 border border-border rounded-md bg-card hover:border-primary hover:-translate-y-0.5 transition-all group"
+                  >
+                    <div>
+                      <div className="font-semibold">{l.name}</div>
+                      {l.native_name && <div className="text-xs text-muted-foreground">{l.native_name}</div>}
+                    </div>
+                    {/* Optional book count if available */}
+                    {/* <div className="text-xs font-mono bg-muted px-2 py-0.5 rounded text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary">
+                      {l.book_count}
+                    </div> */}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Categories */}
+          <div>
+            <h2 className="font-display text-2xl font-semibold mb-6">Subject categories</h2>
+            {categories.length === 0 ? (
+              <p className="text-muted-foreground text-sm">Categories currently unavailable.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {categories.map((c) => (
+                  <Link
+                    key={c.id}
+                    to={`/books?category=${c.slug}`}
+                    className="px-4 py-2 border border-border rounded-full bg-card hover:bg-foreground hover:text-background transition-colors text-sm font-medium"
+                  >
+                    {c.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Value props */}
+      <section className="border-t border-border py-16 md:py-24 bg-card">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-3 gap-10 text-center">
+          <div>
+            <div className="mx-auto size-14 rounded-full bg-secondary flex items-center justify-center mb-5">
+              <Download className="size-6 text-foreground" />
+            </div>
+            <h3 className="font-display font-semibold text-lg mb-2">Instant PDF access</h3>
+            <p className="text-muted-foreground text-sm">Download your books the second your payment clears. No DRM, no special reader apps required.</p>
+          </div>
+          <div>
+            <div className="mx-auto size-14 rounded-full bg-secondary flex items-center justify-center mb-5">
+              <Globe2 className="size-6 text-foreground" />
+            </div>
+            <h3 className="font-display font-semibold text-lg mb-2">Regional focus</h3>
+            <p className="text-muted-foreground text-sm">We specialize in Indian languages, working directly with publishers to digitize rare and popular works.</p>
+          </div>
+          <div>
+            <div className="mx-auto size-14 rounded-full bg-secondary flex items-center justify-center mb-5">
+              <ShieldCheck className="size-6 text-foreground" />
+            </div>
+            <h3 className="font-display font-semibold text-lg mb-2">Secure purchasing</h3>
+            <p className="text-muted-foreground text-sm">Fully encrypted payments via Razorpay. Access your library forever via your dashboard.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonial */}
+      <section className="border-t border-border py-16 md:py-24 bg-primary text-primary-foreground relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--color-primary-foreground)_0,_transparent_1px)] bg-[size:16px_16px]" />
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center relative z-10">
+          <Quote className="size-10 mx-auto text-primary-foreground/30 mb-6" />
+          <p className="font-display text-2xl md:text-3xl leading-relaxed mb-8">
+            "Finally, a place where I can easily buy and download Marathi literature in high-quality PDF format. The store is incredibly fast and simple to use."
+          </p>
+          <div className="font-mono text-sm tracking-wider uppercase text-primary-foreground/70">
+            ?" Rohan M., Mumbai
           </div>
         </div>
       </section>
