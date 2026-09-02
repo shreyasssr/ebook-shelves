@@ -1,19 +1,38 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Trash2, ShoppingBag } from "lucide-react";
+import { Trash2, ShoppingBag, Loader2 } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
-import ImagePlaceholder from "@/components/ImagePlaceholder";
 import { formatINR, effectivePrice } from "@/lib/format";
+import { pb } from "@/lib/pocketbase";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
 
-// BACKEND REMOVED: cart item IDs are still tracked locally (see useCart),
-// but resolving those IDs into full book details (name, price, cover) used
-// to require a Supabase lookup. No backend is connected, so `books` is
-// always empty here and the cart renders its existing "empty" state.
 export default function Cart() {
-  const { remove, count } = useCart();
-  const books: any[] = [];
+  const { items, remove, count } = useCart();
+  const [books, setBooks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const nav = useNavigate();
+
+  useEffect(() => {
+    async function load() {
+      if (items.length === 0) {
+        setBooks([]);
+        return;
+      }
+      setLoading(true);
+      try {
+        const filterStr = items.map((id) => `id="${id}"`).join(" || ");
+        const res = await pb.collection("books").getFullList({ filter: filterStr });
+        setBooks(res);
+      } catch (err) {
+        console.error("Cart fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [items]);
 
   const total = books.reduce((s, b) => s + Number(effectivePrice(b.price, b.discount_price)), 0);
 
@@ -37,7 +56,7 @@ export default function Cart() {
               {books.map((b) => (
                 <div key={b.id} className="flex gap-4 p-3 border border-border rounded-lg bg-card">
                   <Link to={`/book/${b.slug}`} className="w-16 h-24 rounded overflow-hidden shrink-0">
-                    <ImagePlaceholder src={b.thumbnail_url} alt={b.name} label="Cover" size="128×192" />
+                    <ImagePlaceholder src={b.thumbnail ? pb.files.getUrl(b, b.thumbnail) : ""} alt={b.name} label="Cover" size="128×192" />
                   </Link>
                   <div className="flex-1 min-w-0">
                     <Link to={`/book/${b.slug}`} className="font-display font-medium hover:text-primary line-clamp-2">{b.name}</Link>
