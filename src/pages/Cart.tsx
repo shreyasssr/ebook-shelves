@@ -9,20 +9,20 @@ import { pb } from "@/lib/pocketbase";
 import ImagePlaceholder from "@/components/ImagePlaceholder";
 
 export default function Cart() {
-  const { items, remove, count } = useCart();
+  const { bookIds, remove, count } = useCart();
   const [books, setBooks] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const nav = useNavigate();
 
   useEffect(() => {
     async function load() {
-      if (items.length === 0) {
+      if (bookIds.length === 0) {
         setBooks([]);
         return;
       }
       setLoading(true);
       try {
-        const filterStr = items.map((id) => `id="${id}"`).join(" || ");
+        const filterStr = bookIds.map((id: string) => `id="${id}"`).join(" || ");
         const res = await pb.collection("books").getFullList({ filter: filterStr });
         setBooks(res);
       } catch (err) {
@@ -32,7 +32,7 @@ export default function Cart() {
       }
     }
     load();
-  }, [items]);
+  }, [bookIds]);
 
   const total = books.reduce((s, b) => s + Number(effectivePrice(b.price, b.discount_price)), 0);
 
