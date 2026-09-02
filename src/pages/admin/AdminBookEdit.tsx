@@ -108,7 +108,7 @@ export default function AdminBookEdit() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">{isNew ? "New book" : "Edit book"}</h1>
+      <h1 className="text-2xl font-display font-semibold mb-6">{isNew ? "New book" : "Edit book"}</h1>
       <div className="grid md:grid-cols-2 gap-4 max-w-3xl">
         <div><Label>Title *</Label><Input value={book.name||""} onChange={(e)=>setBook({...book, name:e.target.value, slug: book.slug || slugify(e.target.value)})}/></div>
         <div><Label>Slug</Label><Input value={book.slug||""} onChange={(e)=>setBook({...book, slug:e.target.value})}/></div>
@@ -136,7 +136,7 @@ export default function AdminBookEdit() {
         <div className="md:col-span-2"><Label>Short description *</Label><Textarea rows={2} value={book.description||""} onChange={(e)=>setBook({...book, description:e.target.value})}/></div>
         <div className="md:col-span-2"><Label>Long description</Label><Textarea rows={6} value={book.long_description||""} onChange={(e)=>setBook({...book, long_description:e.target.value})}/></div>
 
-        <div className="md:col-span-2 border border-border rounded p-4">
+        <div className="md:col-span-2 glass-panel rounded-2xl p-4">
           <Label>Thumbnail (public)</Label>
           <div className="flex gap-3 items-center mt-2">
             <Input type="file" accept="image/*" onChange={(e)=>{ const f=e.target.files?.[0]; if(f) setThumbnailFile(f); }}/>
@@ -144,7 +144,7 @@ export default function AdminBookEdit() {
             {thumbnailFile && <span className="text-xs text-muted-foreground truncate">{thumbnailFile.name} (pending upload)</span>}
           </div>
         </div>
-        <div className="md:col-span-2 border border-border rounded p-4">
+        <div className="md:col-span-2 glass-panel rounded-2xl p-4">
           <Label>PDF file (private)</Label>
           <div className="flex gap-3 items-center mt-2">
             <Input type="file" accept="application/pdf" onChange={(e)=>{ const f=e.target.files?.[0]; if(f) setEbookFile(f); }}/>

@@ -163,7 +163,7 @@ export default function Catalog() {
   const SidebarContent = () => (
     <>
       <div className="flex items-center justify-between mb-2.5">
-        <div className="font-display font-medium">Language</div>
+        <div className="font-comic tracking-wide">Language</div>
       </div>
       <ul className="space-y-1.5 mb-7">
         <li>
@@ -187,7 +187,7 @@ export default function Catalog() {
       </ul>
 
       <div className="border-t border-dashed border-border pt-5 mb-7">
-        <div className="font-display font-medium mb-2.5">Category</div>
+        <div className="font-comic tracking-wide mb-2.5">Category</div>
         <ul className="space-y-1.5">
           <li>
             <button
@@ -211,7 +211,7 @@ export default function Catalog() {
       </div>
 
       <div className="border-t border-dashed border-border pt-5">
-        <div className="font-display font-medium mb-2.5">Price range</div>
+        <div className="font-comic tracking-wide mb-2.5">Price range</div>
         <div className="flex items-center gap-2">
           <Input 
             type="number" 
@@ -256,9 +256,9 @@ export default function Catalog() {
       {showMobileFilters && (
         <div className="fixed inset-0 z-50 flex md:hidden">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowMobileFilters(false)} />
-          <div className="relative w-[80%] max-w-sm bg-background h-full p-6 overflow-y-auto border-r border-border shadow-xl">
+          <div className="relative w-[80%] max-w-sm bg-background h-full p-6 overflow-y-auto border-r-[3px] border-border shadow-xl">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="font-display font-semibold text-lg">Filters</h2>
+              <h2 className="font-comic tracking-wide text-lg">Filters</h2>
               <Button variant="ghost" size="icon" onClick={() => setShowMobileFilters(false)}>
                 <X className="size-5" />
               </Button>
@@ -280,7 +280,7 @@ export default function Catalog() {
           <div className="flex-1">
             <div className="flex items-end justify-between mb-5 gap-3 flex-wrap">
               <div>
-                <h1 className="font-display text-2xl font-semibold mb-1">
+                <h1 className="font-comic text-3xl tracking-wide mb-1">
                   {title}
                 </h1>
                 <div className="text-sm text-muted-foreground font-mono">
@@ -320,11 +320,11 @@ export default function Catalog() {
             {loading && books.length === 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="aspect-[2/3] bg-muted rounded-md animate-pulse" />
+                  <div key={i} className="aspect-[2/3] bg-muted animate-pulse border-[3px] border-border" />
                 ))}
               </div>
             ) : books.length === 0 ? (
-              <div className="border-2 border-dashed border-border bg-card rounded-lg py-20 text-center flex flex-col items-center justify-center">
+              <div className="border-[3px] border-dashed border-border bg-card py-20 text-center flex flex-col items-center justify-center">
                 <Filter className="size-8 text-muted-foreground mb-4 opacity-50" />
                 <p className="text-muted-foreground mb-4">No books match your current filters.</p>
                 {activeFilterCount > 0 && (
@@ -357,9 +357,9 @@ export default function Catalog() {
 
             {showRelated && (
               <div className="mt-20 pt-10 border-t border-dashed border-border">
-                <h2 className="font-display text-xl font-semibold mb-6">You might also like</h2>
+                <h2 className="font-comic text-2xl tracking-wide mb-6">You might also like</h2>
                 {relatedBooks.length === 0 ? (
-                  <div className="text-sm text-muted-foreground py-8 text-center border border-dashed border-border rounded-lg bg-card/50">
+                  <div className="text-sm text-muted-foreground py-8 text-center border-[3px] border-dashed border-border bg-card/50">
                     Once catalog data is restored, related books will appear here.
                   </div>
                 ) : (

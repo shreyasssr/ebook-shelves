@@ -141,13 +141,13 @@ export default function Dashboard() {
     const canDownload = it.is_active && !expired && !exhausted && it.order?.status === "paid";
     
     return (
-      <div className="flex gap-4 p-4 border border-border rounded-lg bg-card">
-        <div className="w-16 h-24 rounded overflow-hidden shrink-0">
+      <div className="flex gap-4 p-4 border-[3px] border-border  bg-card comic-shadow">
+        <div className="w-16 h-24 overflow-hidden shrink-0 border-2 border-border comic-shadow-sm">
           <ImagePlaceholder src={it.book?.thumbnail_url ?? undefined} alt={it.book?.name} label="Cover" size="128×192" />
         </div>
         <div className="flex-1 min-w-0 flex flex-col justify-between">
           <div>
-            <h3 className="font-display font-medium line-clamp-1 text-base">{it.book?.name ?? "Book"}</h3>
+            <h3 className="font-comic tracking-wide line-clamp-1 text-base">{it.book?.name ?? "Book"}</h3>
             <p className="text-sm text-muted-foreground font-mono">{it.book?.author}</p>
             <p className="text-xs text-muted-foreground mt-1 font-mono">
               Downloads: {it.download_count}/{it.max_downloads} · Expires {new Date(it.expires_at).toLocaleDateString()}
@@ -177,7 +177,7 @@ export default function Dashboard() {
       <Helmet><title>My Library | Digisell Books</title></Helmet>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="font-display text-3xl font-semibold">My Library</h1>
+          <h1 className="font-comic text-4xl tracking-wide">My Library</h1>
           <Button asChild variant="outline"><Link to="/orders">Order history</Link></Button>
         </div>
 
@@ -206,7 +206,7 @@ export default function Dashboard() {
         )}
 
         {items.length === 0 ? (
-          <div className="text-center py-20 border-2 border-dashed border-border rounded-lg">
+          <div className="text-center py-20 border-[3px] border-dashed border-border">
             <div className="mx-auto size-14 rounded-full bg-secondary flex items-center justify-center mb-4">
               <BookOpen className="size-6 text-muted-foreground"/>
             </div>
@@ -214,7 +214,7 @@ export default function Dashboard() {
             <Button asChild><Link to="/books">Browse books</Link></Button>
           </div>
         ) : sorted.length === 0 ? (
-          <div className="text-center py-16 border-2 border-dashed border-border rounded-lg bg-card/50">
+          <div className="text-center py-16 border-[3px] border-dashed border-border bg-card/50">
             <p className="text-muted-foreground mb-4">No books match '{searchQuery}'.</p>
             <Button variant="outline" onClick={() => setSearchQuery("")}>Clear search</Button>
           </div>
@@ -223,13 +223,13 @@ export default function Dashboard() {
             {showGroups ? (
               <>
                 <div className="mb-8">
-                  <h2 className="font-display font-medium text-lg mb-4 text-foreground/90">Recently added</h2>
+                  <h2 className="font-comic tracking-wide text-lg mb-4 text-foreground/90">Recently added</h2>
                   <div className="grid md:grid-cols-2 gap-4">
                     {recentItems.map(it => <ItemCard key={it.id} it={it} />)}
                   </div>
                 </div>
                 <div className="border-t border-dashed border-border pt-8">
-                  <h2 className="font-display font-medium text-lg mb-4 text-foreground/90">Older purchases</h2>
+                  <h2 className="font-comic tracking-wide text-lg mb-4 text-foreground/90">Older purchases</h2>
                   <div className="grid md:grid-cols-2 gap-4">
                     {olderItems.map(it => <ItemCard key={it.id} it={it} />)}
                   </div>

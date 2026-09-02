@@ -96,28 +96,28 @@ export default function Checkout() {
     <>
       <Helmet><title>Checkout | Digisell Books</title></Helmet>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
-        <h1 className="font-display text-3xl font-semibold mb-6">Checkout</h1>
+        <h1 className="font-comic text-4xl tracking-wide mb-6">Checkout</h1>
         <form onSubmit={place} className="grid md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">
-            <section className="border border-border rounded-lg p-5 bg-card">
-              <h2 className="font-display font-medium mb-4">Contact details</h2>
+            <section className="border-[3px] border-border  bg-card comic-shadow">
+              <h2 className="font-comic tracking-wide mb-4">Contact details</h2>
               <div className="space-y-3">
                 <div><Label>Full name</Label><Input required value={name} onChange={(e)=>setName(e.target.value)}/></div>
                 <div><Label>Email (for delivery)</Label><Input type="email" required value={email} onChange={(e)=>setEmail(e.target.value)}/></div>
               </div>
             </section>
 
-            <section className="border border-border rounded-lg p-5 bg-card">
-              <h2 className="font-display font-medium mb-4">Payment method</h2>
+            <section className="border-[3px] border-border  bg-card comic-shadow">
+              <h2 className="font-comic tracking-wide mb-4">Payment method</h2>
               <RadioGroup value={method} onValueChange={(v)=>setMethod(v as any)}>
-                <label className="flex items-center gap-3 p-3 border border-border rounded-md cursor-pointer hover:border-primary/50 transition-colors">
+                <label className="flex items-center gap-3 p-3 border-[3px] border-border rounded-md cursor-pointer hover:border-primary/50 transition-colors">
                   <RadioGroupItem value="razorpay"/>
                   <div className="flex-1">
                     <div className="font-medium">Razorpay (stubbed)</div>
                     <div className="text-xs text-muted-foreground">Card / UPI / Netbanking — payment simulated for now</div>
                   </div>
                 </label>
-                <label className="flex items-center gap-3 p-3 border border-border rounded-md cursor-pointer hover:border-primary/50 transition-colors">
+                <label className="flex items-center gap-3 p-3 border-[3px] border-border rounded-md cursor-pointer hover:border-primary/50 transition-colors">
                   <RadioGroupItem value="cod"/>
                   <div className="flex-1">
                     <div className="font-medium">Cash on Delivery</div>
@@ -129,8 +129,8 @@ export default function Checkout() {
           </div>
 
           <aside className="space-y-4">
-            <div className="border border-border rounded-lg p-5 bg-card sticky top-24">
-              <h2 className="font-display font-medium mb-3">Order summary</h2>
+            <div className="border-[3px] border-border  bg-card comic-shadow sticky top-24">
+              <h2 className="font-comic tracking-wide mb-3">Order summary</h2>
               <ul className="space-y-2 max-h-60 overflow-auto text-sm">
                 {books.map((b)=>(
                   <li key={b.id} className="flex justify-between gap-2">

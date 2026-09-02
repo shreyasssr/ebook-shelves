@@ -19,11 +19,11 @@ export default function AdminEmailTemplates() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold mb-6">Email Templates</h1>
+      <h1 className="text-2xl font-display font-semibold mb-6">Email Templates</h1>
 
       <div className="grid md:grid-cols-3 gap-6">
-        <div className="md:col-span-1 border border-border rounded-lg bg-card overflow-hidden h-fit">
-          <div className="bg-muted p-3 border-b border-border font-semibold text-sm text-muted-foreground">
+        <div className="md:col-span-1 glass-panel rounded-2xl overflow-hidden h-fit">
+          <div className="bg-white/5 p-4 rounded-xl border border-border text-sm">
             Available Templates
           </div>
           <ul className="divide-y divide-border">
@@ -42,7 +42,7 @@ export default function AdminEmailTemplates() {
 
         <div className="md:col-span-2">
           {selectedTemplate ? (
-            <div className="border border-border rounded-lg bg-card p-6 space-y-6">
+            <div className="glass-panel rounded-2xl p-6 space-y-6">
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1">Template Name</label>
                 <div className="font-medium">{selectedTemplate.name}</div>
@@ -50,14 +50,14 @@ export default function AdminEmailTemplates() {
               
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1">Subject</label>
-                <div className="p-3 bg-muted rounded border border-border text-sm">
+                <div className="bg-white/5 p-4 rounded-xl border border-border text-sm">
                   {renderHighlightedBody(selectedTemplate.subject)}
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1">Body (Plain Text)</label>
-                <div className="p-4 bg-muted rounded border border-border text-sm whitespace-pre-wrap font-mono">
+                <div className="bg-white/5 p-4 rounded-xl border border-border text-sm">
                   {renderHighlightedBody(selectedTemplate.body)}
                 </div>
               </div>

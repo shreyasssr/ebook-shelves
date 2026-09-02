@@ -40,7 +40,7 @@ export default function Cart() {
     <>
       <Helmet><title>Cart | Digisell Books</title></Helmet>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
-        <h1 className="font-display text-3xl font-semibold mb-6">Your cart <span className="text-muted-foreground font-mono text-xl">({count})</span></h1>
+        <h1 className="font-comic text-4xl tracking-wide mb-6">Your cart <span className="text-muted-foreground font-mono text-xl">({count})</span></h1>
 
         {books.length === 0 ? (
           <div className="text-center py-20 border-2 border-dashed border-border rounded-lg">
@@ -54,12 +54,12 @@ export default function Cart() {
           <div className="grid md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-3">
               {books.map((b) => (
-                <div key={b.id} className="flex gap-4 p-3 border border-border rounded-lg bg-card">
+                <div key={b.id} className="flex gap-4 p-3 border-[3px] border-border  bg-card comic-shadow comic-shadow">
                   <Link to={`/book/${b.slug}`} className="w-16 h-24 rounded overflow-hidden shrink-0">
                     <ImagePlaceholder src={b.thumbnail ? pb.files.getUrl(b, b.thumbnail) : ""} alt={b.name} label="Cover" size="128×192" />
                   </Link>
                   <div className="flex-1 min-w-0">
-                    <Link to={`/book/${b.slug}`} className="font-display font-medium hover:text-primary line-clamp-2">{b.name}</Link>
+                    <Link to={`/book/${b.slug}`} className="font-comic tracking-wide hover:text-primary line-clamp-2">{b.name}</Link>
                     <p className="text-sm text-muted-foreground font-mono">{b.author}</p>
                     <p className="mt-2 font-mono font-semibold text-primary">{formatINR(effectivePrice(b.price, b.discount_price))}</p>
                   </div>
@@ -68,8 +68,8 @@ export default function Cart() {
               ))}
             </div>
             <aside className="space-y-4">
-              <div className="border border-border rounded-lg p-5 bg-card">
-                <h2 className="font-display font-medium mb-3">Order summary</h2>
+              <div className="border-[3px] border-border  bg-card comic-shadow">
+                <h2 className="font-comic tracking-wide mb-3">Order summary</h2>
                 <div className="flex justify-between text-sm mb-2"><span>Subtotal</span><span className="font-mono">{formatINR(total)}</span></div>
                 <div className="flex justify-between text-sm mb-2 text-muted-foreground"><span>Delivery</span><span>Instant download</span></div>
                 <div className="border-t border-dashed border-border my-3"/>

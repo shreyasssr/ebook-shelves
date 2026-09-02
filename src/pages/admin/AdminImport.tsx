@@ -139,7 +139,7 @@ export default function AdminImport() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold mb-2">Bulk import books</h1>
+      <h1 className="text-2xl font-display font-semibold mb-2">Bulk import books</h1>
       <p className="text-sm text-muted-foreground mb-6">Upload a CSV to add or update books in bulk. Use <code>language_code</code> (en/hi/mr/gu/bn/ta) and <code>category_slug</code> to reference taxonomy.</p>
 
       <div className="flex gap-3 mb-6">
@@ -164,7 +164,7 @@ export default function AdminImport() {
             )}
           </div>
           {progress.errors.length > 0 && (
-            <details className="border border-border rounded p-3 bg-muted/50">
+            <details className="glass-panel rounded-xl p-3 bg-white/5">
               <summary className="cursor-pointer text-sm font-medium">
                 View errors ({progress.errors.length})
               </summary>

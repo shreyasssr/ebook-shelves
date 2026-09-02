@@ -43,7 +43,7 @@ export default function BookDetail() {
           <div className="mx-auto size-14 rounded-full bg-secondary flex items-center justify-center mb-5">
             <BookOpen className="size-6 text-muted-foreground" />
           </div>
-          <h1 className="font-display text-2xl font-semibold mb-2">This title isn't on the shelf</h1>
+          <h1 className="font-comic text-3xl tracking-wide mb-2">This title isn't on the shelf</h1>
           <p className="text-sm text-muted-foreground mb-6 font-mono">"{slug}"</p>
           <Button asChild><Link to="/books">Browse all books</Link></Button>
         </div>
@@ -66,7 +66,7 @@ export default function BookDetail() {
       <Helmet><title>{book.name} | Digisell Books</title></Helmet>
       <div className="max-w-6xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-12">
         <div>
-          <div className="aspect-[2/3] bg-muted relative rounded-md overflow-hidden shadow-lg border border-border max-w-sm mx-auto md:mx-0">
+          <div className="aspect-[2/3] bg-muted relative overflow-hidden border-[3px] border-border comic-shadow max-w-sm mx-auto md:mx-0">
              <ImagePlaceholder
                 src={coverUrl}
                 alt={book.name}
@@ -76,7 +76,7 @@ export default function BookDetail() {
           </div>
         </div>
         <div>
-          <h1 className="text-3xl md:text-5xl font-display font-semibold mb-2">{book.name}</h1>
+          <h1 className="font-comic text-4xl md:text-6xl tracking-wide mb-2">{book.name}</h1>
           <p className="text-xl text-muted-foreground mb-6">{book.author}</p>
           
           <div className="flex items-baseline gap-4 mb-8">
@@ -105,7 +105,7 @@ export default function BookDetail() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 text-sm bg-secondary/20 p-6 rounded-lg border border-border">
+          <div className="grid grid-cols-2 gap-4 text-sm bg-secondary/20 p-6 border-[3px] border-border comic-shadow">
              {book.expand?.language && (
                <div>
                  <span className="text-muted-foreground block mb-1">Language</span>

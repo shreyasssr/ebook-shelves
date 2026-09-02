@@ -25,11 +25,11 @@ export default function AdminImportHistory() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold mb-6">Import History</h1>
+      <h1 className="text-2xl font-display font-semibold mb-6">Import History</h1>
 
-      <div className="border border-border rounded-lg bg-card overflow-hidden">
+      <div className="glass-panel rounded-2xl overflow-hidden">
         <table className="w-full text-left text-sm">
-          <thead className="bg-muted text-muted-foreground">
+          <thead className="bg-white/5">
             <tr>
               <th className="p-3 font-medium">Date</th>
               <th className="p-3 font-medium">Filename</th>

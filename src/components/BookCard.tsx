@@ -24,13 +24,11 @@ export default function BookCard({ book }: { book: BookCardData }) {
   return (
     <Link
       to={`/book/${book.slug}`}
-      className="group flex flex-col rounded-md overflow-hidden border border-border bg-card
-                 shadow-[2px_2px_0_0_var(--color-border)] hover:shadow-[3px_3px_0_0_var(--color-brass)]
-                 hover:-translate-y-0.5 transition-all duration-150"
+      className="theme-retro comic-shadow-hover group flex flex-col overflow-hidden
+                 border-[3px] border-border bg-card comic-shadow-sm"
     >
-      {/* Cover — spine shadow on the left edge evokes a real book standing on a shelf */}
-      <div className="aspect-[2/3] relative overflow-hidden bg-muted">
-        <div className="absolute inset-y-0 left-0 w-2 bg-black/10 z-10" />
+      {/* Cover — thick ink panel border reads as a comic-panel frame */}
+      <div className="aspect-[2/3] relative overflow-hidden bg-muted border-b-[3px] border-border">
         <ImagePlaceholder
           src={coverUrl}
           alt={book.name}
@@ -39,19 +37,19 @@ export default function BookCard({ book }: { book: BookCardData }) {
           className="group-hover:scale-[1.03] transition-transform duration-300"
         />
         {pct > 0 && (
-          <span className="absolute top-2 right-0 bg-burgundy text-burgundy-foreground text-[11px] font-mono font-medium px-2 py-0.5 rounded-l-full shadow-sm">
+          <span className="absolute top-2 -right-1 bg-burgundy text-burgundy-foreground text-[11px] font-poster px-2.5 py-1 border-[3px] border-border rotate-3">
             −{pct}%
           </span>
         )}
       </div>
 
-      <div className="p-3 flex flex-col gap-1 border-t border-dashed border-border">
-        <h3 className="font-display font-medium text-[15px] leading-snug line-clamp-2 group-hover:text-primary">
+      <div className="p-3 flex flex-col gap-1">
+        <h3 className="font-display font-semibold text-[15px] leading-snug line-clamp-2 group-hover:text-primary">
           {book.name}
         </h3>
         <p className="text-xs text-muted-foreground line-clamp-1 font-mono">{book.author}</p>
         <div className="mt-1.5 flex items-baseline gap-2">
-          <span className="font-mono font-semibold text-sm text-primary">
+          <span className="font-poster text-sm text-primary">
             {formatINR(effectivePrice(book.price, book.discount_price))}
           </span>
           {pct > 0 && (

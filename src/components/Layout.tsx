@@ -11,27 +11,40 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { pb } from "@/lib/pocketbase";
 
-// BACKEND REMOVED: the language filter pills used to be populated from the
-// `languages` table. No backend is connected, so this list is empty and
-// only the static "All" pill renders.
 export default function Layout() {
   const { user, isAdmin, signOut } = useAuth();
   const { count } = useCart();
   const nav = useNavigate();
-  const langs: { code: string; name: string }[] = [];
+  const [langs, setLangs] = useState<{ code: string; name: string }[]>([]);
   const [q, setQ] = useState("");
 
+  useEffect(() => {
+    async function loadLangs() {
+      try {
+        const res = await pb.collection("languages").getFullList({
+          filter: "is_active=true",
+          sort: "display_order",
+        });
+        setLangs(res.map((l: any) => ({ code: l.code, name: l.name })));
+      } catch (err) {
+        console.error("Failed to load languages", err);
+      }
+    }
+    loadLangs();
+  }, []);
+
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
+    <div className="theme-retro halftone-bg min-h-screen flex flex-col text-foreground">
+      <header className="sticky top-0 z-40 border-b-[3px] border-border bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-4">
           <Link to="/" className="flex items-center gap-2 shrink-0">
-            <span className="flex items-center justify-center size-8 rounded-full bg-primary text-primary-foreground">
+            <span className="flex items-center justify-center size-9 border-[3px] border-border bg-comic-blue text-comic-blue-foreground comic-shadow-sm -rotate-3">
               <BookOpen className="size-4" />
             </span>
-            <span className="font-display font-semibold text-xl tracking-tight">
+            <span className="font-comic text-2xl tracking-wide">
               Digisell <span className="text-burgundy">Books</span>
             </span>
           </Link>
@@ -48,7 +61,7 @@ export default function Layout() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search 5,000+ titles, authors…"
-              className="w-full pl-9 pr-4 py-2 rounded-full border border-input bg-secondary/60 text-sm
+              className="w-full pl-9 pr-4 py-2 border-[3px] border-input bg-secondary/60 text-sm
                          focus:outline-none focus:ring-2 focus:ring-ring focus:bg-background transition-colors"
             />
           </form>
@@ -57,10 +70,10 @@ export default function Layout() {
             <Link to="/books" className="hidden sm:inline-block px-3 py-2 text-sm font-medium hover:text-primary">
               Browse
             </Link>
-            <Link to="/cart" className="relative p-2 rounded-md hover:bg-muted">
+            <Link to="/cart" className="relative p-2 hover:bg-muted">
               <ShoppingCart className="size-5" />
               {count > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-burgundy text-burgundy-foreground text-[10px] font-mono rounded-full size-4 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-burgundy text-burgundy-foreground text-[10px] font-poster border-2 border-border rounded-full size-[18px] flex items-center justify-center">
                   {count}
                 </span>
               )}
@@ -91,15 +104,15 @@ export default function Layout() {
           </nav>
         </div>
 
-        {/* Shelf strip — language pills, styled like little bookmark tabs */}
-        <div className="border-t border-border bg-secondary/40">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex gap-1.5 overflow-x-auto text-sm">
+        {/* Shelf strip — language pills, styled like little comic caption tags */}
+        <div className="border-t-[3px] border-border bg-secondary/40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex gap-2 overflow-x-auto text-sm">
             <NavLink
               to="/books"
               end
               className={({ isActive }) =>
-                `px-3 py-1 rounded-full font-medium whitespace-nowrap transition-colors ${
-                  isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                `px-3 py-1 border-2 border-border font-medium whitespace-nowrap transition-colors ${
+                  isActive ? "bg-primary text-primary-foreground" : "bg-background hover:bg-muted"
                 }`
               }
             >
@@ -109,7 +122,7 @@ export default function Layout() {
               <NavLink
                 key={l.code}
                 to={`/books?lang=${l.code}`}
-                className="px-3 py-1 rounded-full hover:bg-muted whitespace-nowrap"
+                className="px-3 py-1 border-2 border-border bg-background hover:bg-muted whitespace-nowrap"
               >
                 {l.name}
               </NavLink>
@@ -123,14 +136,14 @@ export default function Layout() {
       </main>
 
       {/* ── Footer ─────────────────────────────────────────────────────────── */}
-      <footer className="border-t border-border mt-16 bg-secondary/30">
+      <footer className="border-t-[3px] border-border mt-16 bg-secondary/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid sm:grid-cols-2 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <span className="flex items-center justify-center size-7 rounded-full bg-primary text-primary-foreground">
+              <span className="flex items-center justify-center size-7 border-[3px] border-border bg-primary text-primary-foreground">
                 <BookOpen className="size-3.5" />
               </span>
-              <span className="font-display font-semibold text-lg">Digisell Books</span>
+              <span className="font-comic text-xl tracking-wide">Digisell Books</span>
             </div>
             <p className="text-sm text-muted-foreground max-w-xs">
               A curated PDF ebook shop in Hindi, English, Marathi, Gujarati, Bengali, Tamil — and growing.

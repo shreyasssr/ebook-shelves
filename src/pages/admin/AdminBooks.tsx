@@ -35,16 +35,16 @@ export default function AdminBooks() {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Books</h1>
+        <h1 className="text-2xl font-display font-semibold">Books</h1>
         <Button asChild><Link to="/admin/books/new"><Plus className="size-4 mr-1"/> Add book</Link></Button>
       </div>
       <div className="flex gap-2 mb-4">
         <Input placeholder="Search by title..." value={q} onChange={(e)=>setQ(e.target.value)} onKeyDown={(e)=>e.key==="Enter"&&load()}/>
         <Button variant="outline" onClick={load}>Search</Button>
       </div>
-      <div className="border border-border rounded-lg overflow-hidden">
+      <div className="glass-panel rounded-2xl overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-muted text-left"><tr>
+          <thead className="bg-white/5"><tr>
             <th className="p-3">Title</th><th className="p-3">Author</th><th className="p-3">Price</th><th className="p-3">Status</th><th className="p-3">Sales</th><th className="p-3"></th>
           </tr></thead>
           <tbody>

@@ -54,16 +54,16 @@ export default function AdminDashboard() {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <h1 className="text-2xl font-display font-semibold">Dashboard</h1>
         <Button variant="outline" size="sm" onClick={handleExport}>
           <Download className="mr-2 h-4 w-4" /> Export CSV
         </Button>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {cards.map((c)=>(
-          <div key={c.label} className="border border-border rounded-lg p-4 bg-card">
-            <div className="text-xs text-muted-foreground uppercase">{c.label}</div>
-            <div className="text-2xl font-bold mt-1">{c.value}</div>
+          <div key={c.label} className="glass-panel rounded-2xl p-4">
+            <div className="text-xs text-muted-foreground uppercase tracking-wide">{c.label}</div>
+            <div className="text-2xl font-display font-semibold mt-1">{c.value}</div>
           </div>
         ))}
       </div>

@@ -63,9 +63,13 @@
   --color-brass-foreground: var(--brass-foreground);
   --color-burgundy: var(--burgundy);
   --color-burgundy-foreground: var(--burgundy-foreground);
+  --color-comic-blue: var(--comic-blue, oklch(0.55 0.09 235));
+  --color-comic-blue-foreground: var(--comic-blue-foreground, oklch(0.99 0.01 85));
   --font-sans: "Public Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Fraunces", ui-serif, Georgia, serif;
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-comic: "Bangers", "Fraunces", ui-serif, serif;
+  --font-poster: "Archivo Black", "Public Sans", ui-sans-serif, sans-serif;
 }
 
 :root {
@@ -158,4 +162,110 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
   }
+}
+
+/* ==========================================================================
+   Theme scopes
+   -----------------------------------------------------------------------
+   Wrap a subtree in .theme-retro or .theme-glass to swap the semantic
+   token values (bg-primary, text-burgundy, border-border, rounded-*, etc.)
+   used throughout the existing components — no per-component class edits
+   needed for color/radius. Structural effects (thick borders, offset
+   shadows, blur panels, gradients) still need their own utility classes
+   below, since those aren't expressible as a single CSS custom property.
+   ========================================================================== */
+
+/* ---- Retro pop / comic — storefront ---- */
+.theme-retro {
+  --background: oklch(0.97 0.025 85);
+  --foreground: oklch(0.16 0.01 40);
+  --card: oklch(0.99 0.015 85);
+  --card-foreground: oklch(0.16 0.01 40);
+  --popover: oklch(0.99 0.015 85);
+  --popover-foreground: oklch(0.16 0.01 40);
+  --primary: oklch(0.66 0.19 35);      /* comic coral-red */
+  --primary-foreground: oklch(0.99 0.01 85);
+  --secondary: oklch(0.9 0.05 90);     /* soft sunshine yellow */
+  --secondary-foreground: oklch(0.16 0.01 40);
+  --muted: oklch(0.94 0.02 85);
+  --muted-foreground: oklch(0.42 0.02 50);
+  --accent: oklch(0.85 0.15 90);       /* sunshine yellow */
+  --accent-foreground: oklch(0.16 0.01 40);
+  --destructive: oklch(0.55 0.19 25);
+  --destructive-foreground: oklch(0.99 0.01 85);
+  --border: oklch(0.16 0.01 40);       /* ink-black borders, on purpose */
+  --input: oklch(0.16 0.01 40);
+  --ring: oklch(0.55 0.09 235);
+  --brass: oklch(0.85 0.15 90);        /* repurposed: sunshine yellow */
+  --brass-foreground: oklch(0.16 0.01 40);
+  --burgundy: oklch(0.66 0.19 35);     /* repurposed: comic coral-red */
+  --burgundy-foreground: oklch(0.99 0.01 85);
+  --comic-blue: oklch(0.55 0.09 235);
+  --comic-blue-foreground: oklch(0.99 0.01 85);
+  --radius: 0rem;
+}
+
+.theme-retro .halftone-bg {
+  background-color: var(--background);
+  background-image: radial-gradient(oklch(0.16 0.01 40 / 9%) 1.5px, transparent 1.5px);
+  background-size: 16px 16px;
+}
+
+.theme-retro .comic-shadow {
+  box-shadow: 5px 5px 0 var(--border);
+}
+.theme-retro .comic-shadow-sm {
+  box-shadow: 3px 3px 0 var(--border);
+}
+.theme-retro .comic-shadow-hover {
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.theme-retro .comic-shadow-hover:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0 var(--border);
+}
+
+/* ---- Glassmorphism — admin ---- */
+.theme-glass {
+  --background: oklch(0.22 0.035 170);
+  --foreground: oklch(0.97 0.01 85);
+  --card: oklch(1 0 0 / 8%);
+  --card-foreground: oklch(0.98 0.01 85);
+  --popover: oklch(0.2 0.03 170);
+  --popover-foreground: oklch(0.97 0.01 85);
+  --primary: oklch(0.85 0.12 85);       /* brass, brightened for dark glass */
+  --primary-foreground: oklch(0.18 0.02 60);
+  --secondary: oklch(1 0 0 / 12%);
+  --secondary-foreground: oklch(0.97 0.01 85);
+  --muted: oklch(1 0 0 / 8%);
+  --muted-foreground: oklch(0.85 0.01 85 / 75%);
+  --accent: oklch(1 0 0 / 14%);
+  --accent-foreground: oklch(0.98 0.01 85);
+  --destructive: oklch(0.68 0.19 25);
+  --destructive-foreground: oklch(0.99 0.01 85);
+  --border: oklch(1 0 0 / 20%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.85 0.12 85);
+  --radius: 1rem;
+}
+
+.glass-admin-bg {
+  background:
+    radial-gradient(circle at 15% 0%, oklch(0.4 0.07 155 / 55%), transparent 45%),
+    radial-gradient(circle at 85% 20%, oklch(0.4 0.09 24 / 45%), transparent 45%),
+    linear-gradient(160deg, oklch(0.26 0.04 170), oklch(0.16 0.03 250) 70%);
+  min-height: 100vh;
+}
+
+.theme-glass .glass-panel {
+  background: oklch(1 0 0 / 7%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid oklch(1 0 0 / 16%);
+}
+.theme-glass .glass-panel-strong {
+  background: oklch(1 0 0 / 12%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid oklch(1 0 0 / 24%);
 }

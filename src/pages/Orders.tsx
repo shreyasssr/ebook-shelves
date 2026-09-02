@@ -65,7 +65,7 @@ export function OrdersList() {
     <>
       <Helmet><title>Orders | Digisell Books</title></Helmet>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
-        <h1 className="font-display text-3xl font-semibold mb-6">Your orders</h1>
+        <h1 className="font-comic text-4xl tracking-wide mb-6">Your orders</h1>
         
         <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
           <div className="flex flex-wrap gap-2">
@@ -94,9 +94,9 @@ export function OrdersList() {
             {isFiltered ? "No orders match these filters." : "You haven't placed any orders yet."}
           </div>
         ) : (
-          <div className="border border-border rounded-lg overflow-hidden bg-card">
+          <div className="border-[3px] border-border  bg-card comic-shadow">
             <table className="w-full text-sm text-left">
-              <thead className="bg-secondary/50 text-muted-foreground font-medium border-b border-border">
+              <thead className="bg-secondary/50 text-muted-foreground font-medium border-b-[3px] border-border">
                 <tr>
                   <th className="px-4 py-3 font-normal">Order</th>
                   <th className="px-4 py-3 font-normal">Date</th>
@@ -164,7 +164,7 @@ export function OrderDetail() {
 
   if (error || !order) return (
     <div className="max-w-md mx-auto px-4 py-24 text-center">
-      <h1 className="font-display text-2xl font-semibold mb-2">Order not found</h1>
+      <h1 className="font-comic text-3xl tracking-wide mb-2">Order not found</h1>
       <p className="text-muted-foreground mb-6">We couldn't find order <span className="font-mono">{id}</span>.</p>
       <Button asChild><Link to="/orders">Back to orders</Link></Button>
     </div>
@@ -178,9 +178,9 @@ export function OrderDetail() {
           &larr; Back to all orders
         </Link>
         
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-border pb-6 mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b-[3px] border-border pb-6 mb-6">
           <div>
-            <h1 className="font-display text-3xl font-semibold mb-1">Order {order.id}</h1>
+            <h1 className="font-comic text-4xl tracking-wide mb-1">Order {order.id}</h1>
             <p className="text-muted-foreground">Placed on {new Date(order.created).toLocaleDateString()}</p>
           </div>
           <div className="flex gap-2 items-center">
@@ -193,9 +193,9 @@ export function OrderDetail() {
           </div>
         </div>
 
-        <div className="border border-border rounded-lg overflow-hidden bg-card mb-8">
+        <div className="border-[3px] border-border  bg-card comic-shadow mb-8">
           <table className="w-full text-sm text-left">
-            <thead className="bg-secondary/50 text-muted-foreground border-b border-border">
+            <thead className="bg-secondary/50 text-muted-foreground border-b-[3px] border-border">
               <tr>
                 <th className="px-4 py-3 font-normal">Item</th>
                 <th className="px-4 py-3 font-normal text-right">Price</th>
@@ -212,7 +212,7 @@ export function OrderDetail() {
                 </tr>
               ))}
             </tbody>
-            <tfoot className="border-t border-border bg-secondary/20">
+            <tfoot className="border-t-[3px] border-border bg-secondary/20">
               <tr>
                 <td className="px-4 py-3 text-right font-medium text-muted-foreground">Total</td>
                 <td className="px-4 py-3 text-right font-mono font-semibold text-primary">{formatINR(order.total_amount)}</td>
@@ -221,7 +221,7 @@ export function OrderDetail() {
           </table>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-6 p-6 border border-border rounded-lg bg-card/50 text-sm">
+        <div className="grid sm:grid-cols-2 gap-6 p-6 border-[3px] border-border  bg-card comic-shadow comic-shadow/50 text-sm">
           <div>
             <h3 className="font-semibold text-foreground mb-3">Payment Details</h3>
             <div className="space-y-1 text-muted-foreground">

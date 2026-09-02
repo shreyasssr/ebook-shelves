@@ -80,13 +80,13 @@ export default function AdminReports() {
   return (
     <>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Reports</h1>
+        <h1 className="text-2xl font-display font-semibold">Reports</h1>
         <Button onClick={handleExport} variant="outline" size="sm">
           <Download className="mr-2 h-4 w-4" /> Export CSV
         </Button>
       </div>
 
-      <div className="flex items-center gap-4 mb-6 p-4 border border-border bg-card rounded-lg">
+      <div className="flex items-center gap-4 mb-6 p-4 glass-panel rounded-2xl">
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1">Start Date</label>
           <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
@@ -97,9 +97,9 @@ export default function AdminReports() {
         </div>
       </div>
 
-      <div className="border border-border rounded-lg bg-card overflow-hidden">
+      <div className="glass-panel rounded-2xl overflow-hidden">
         <table className="w-full text-left text-sm">
-          <thead className="bg-muted text-muted-foreground">
+          <thead className="bg-white/5">
             <tr>
               <th className="p-3 font-medium">Date</th>
               <th className="p-3 font-medium">Orders</th>

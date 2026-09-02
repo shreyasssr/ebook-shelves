@@ -39,33 +39,34 @@ export default function Home() {
       </Helmet>
 
       {/* Hero */}
-      <section className="relative overflow-hidden border-b border-border bg-secondary/30">
+      <section className="theme-retro halftone-bg relative overflow-hidden border-b-[3px] border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-24 grid md:grid-cols-2 gap-10 items-center">
           <div>
-            <div className="inline-flex items-center gap-2 text-sm bg-brass/20 text-brass-foreground px-3 py-1 rounded-full mb-5 font-mono">
+            <div className="inline-flex items-center gap-2 text-sm bg-accent text-accent-foreground border-[3px] border-border px-3 py-1 mb-5 font-poster -rotate-1">
               <Sparkles className="size-3.5" /> 5,000+ ebooks, instant download
             </div>
-            <h1 className="font-display text-4xl md:text-6xl font-semibold leading-[1.05] tracking-tight">
+            <h1 className="font-comic text-5xl md:text-7xl leading-[0.95] tracking-wide">
               Stories in
               <br />
               every language.
               <br />
-              <span className="text-primary italic">Delivered instantly.</span>
+              <span className="text-primary">Delivered instantly.</span>
             </h1>
             <p className="mt-5 text-muted-foreground text-lg max-w-md">
               A curated PDF ebook shop in Hindi, English, Marathi, Gujarati,
-              Bengali, Tamil — and growing.
+              Bengali, Tamil — and growing. Novels, comics and manga, all in
+              one shelf.
             </p>
             <div className="mt-8 flex gap-3">
-              <Button size="lg" asChild className="h-12 px-8 text-base">
+              <Button size="lg" asChild className="h-12 px-8 text-base border-[3px] border-border comic-shadow-hover">
                 <Link to="/books">Browse the stacks</Link>
               </Button>
             </div>
           </div>
-          <div className="relative aspect-[4/3] rounded-lg overflow-hidden border border-border bg-muted rotate-1 hover:rotate-0 transition-transform duration-500 shadow-xl">
+          <div className="relative aspect-[4/3] overflow-hidden border-[3px] border-border bg-muted rotate-1 hover:rotate-0 transition-transform duration-500 comic-shadow">
             <ImagePlaceholder
               variant="prominent"
-              label="A diverse shelf of beautifully bound books"
+              label="A diverse shelf of beautifully bound books, comics and manga"
               size="1600×1200"
             />
           </div>
@@ -73,10 +74,10 @@ export default function Home() {
       </section>
 
       {/* Featured shelf */}
-      <section className="py-16 md:py-24 max-w-7xl mx-auto px-4 sm:px-6">
+      <section className="theme-retro py-16 md:py-24 max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-end justify-between mb-8">
           <div>
-            <h2 className="font-display text-3xl font-semibold">Bestsellers</h2>
+            <h2 className="font-comic text-4xl tracking-wide">Bestsellers</h2>
             <p className="text-muted-foreground mt-2 font-mono text-sm">Most downloaded this month</p>
           </div>
           <Link to="/books?sort=popular" className="hidden sm:block text-sm font-semibold hover:text-primary transition-colors">
@@ -98,11 +99,11 @@ export default function Home() {
       </section>
 
       {/* Categories & Languages */}
-      <section className="border-t border-border bg-secondary/10">
+      <section className="theme-retro border-t-[3px] border-border bg-secondary/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-24 grid md:grid-cols-2 gap-16">
           {/* Languages */}
           <div>
-            <h2 className="font-display text-2xl font-semibold mb-6 flex items-center gap-2">
+            <h2 className="font-comic text-3xl tracking-wide mb-6 flex items-center gap-2">
               <Globe2 className="size-6 text-muted-foreground" /> Shop by language
             </h2>
             {langs.length === 0 ? (
@@ -113,7 +114,7 @@ export default function Home() {
                   <Link
                     key={l.id}
                     to={`/books?lang=${l.code}`}
-                    className="flex justify-between items-center p-3 border border-border rounded-md bg-card hover:border-primary hover:-translate-y-0.5 transition-all group"
+                    className="flex justify-between items-center p-3 border-[3px] border-border bg-card comic-shadow-hover transition-all group"
                   >
                     <div>
                       <div className="font-semibold">{l.name}</div>
@@ -131,7 +132,7 @@ export default function Home() {
 
           {/* Categories */}
           <div>
-            <h2 className="font-display text-2xl font-semibold mb-6">Subject categories</h2>
+            <h2 className="font-comic text-3xl tracking-wide mb-6">Subject categories</h2>
             {categories.length === 0 ? (
               <p className="text-muted-foreground text-sm">Categories currently unavailable.</p>
             ) : (
@@ -140,7 +141,7 @@ export default function Home() {
                   <Link
                     key={c.id}
                     to={`/books?category=${c.slug}`}
-                    className="px-4 py-2 border border-border rounded-full bg-card hover:bg-foreground hover:text-background transition-colors text-sm font-medium"
+                    className="px-4 py-2 border-[3px] border-border bg-card hover:bg-foreground hover:text-background transition-colors text-sm font-medium"
                   >
                     {c.name}
                   </Link>

@@ -41,11 +41,11 @@ export default function AdminOrders() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold mb-6">Orders</h1>
+      <h1 className="text-2xl font-display font-semibold mb-6">Orders</h1>
       {loading ? <div className="p-8 text-center text-muted-foreground">Loading...</div> : (
-      <div className="border border-border rounded-lg overflow-hidden">
+      <div className="glass-panel rounded-2xl overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-muted text-left"><tr>
+          <thead className="bg-white/5"><tr>
             <th className="p-3">Order</th><th className="p-3">Customer</th><th className="p-3">Method</th><th className="p-3">Total</th><th className="p-3">Status</th><th className="p-3">Action</th>
           </tr></thead>
           <tbody>
