@@ -18,7 +18,7 @@ export default function AdminBookEdit() {
   const [book, setBook] = useState<any>({
     name: "", slug: "", author: "", description: "", long_description: "",
     price: 99, discount_price: null, language: "", category: null,
-    is_published: false,
+    is_published: false, is_staff_pick: false,
     isbn: "", publisher: "", published_year: null, page_count: null, edition: "",
   });
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
@@ -153,9 +153,15 @@ export default function AdminBookEdit() {
           <p className="text-xs text-muted-foreground mt-2">Note: Existing PDF file path is hidden for security. Uploading a new one replaces the old one.</p>
         </div>
 
-        <div className="md:col-span-2 flex items-center gap-3">
-          <Switch checked={book.is_published} onCheckedChange={(v)=>setBook({...book, is_published:v})}/>
-          <Label>Published</Label>
+        <div className="md:col-span-2 flex items-center gap-6">
+          <div className="flex items-center gap-3">
+            <Switch checked={book.is_published} onCheckedChange={(v)=>setBook({...book, is_published:v})}/>
+            <Label>Published</Label>
+          </div>
+          <div className="flex items-center gap-3">
+            <Switch checked={book.is_staff_pick} onCheckedChange={(v)=>setBook({...book, is_staff_pick:v})}/>
+            <Label>Staff Pick</Label>
+          </div>
         </div>
 
         <div className="md:col-span-2 flex gap-2">

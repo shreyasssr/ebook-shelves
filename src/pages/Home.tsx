@@ -9,20 +9,27 @@ import { pb } from "@/lib/pocketbase";
 
 export default function Home() {
   const [featured, setFeatured] = useState<BookCardData[]>([]);
+  const [staffPicks, setStaffPicks] = useState<BookCardData[]>([]);
+  const [trending, setTrending] = useState<BookCardData[]>([]);
   const [langs, setLangs] = useState<{ id: string; code: string; name: string; native_name?: string; book_count: number }[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([]);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [booksRes, langsRes, catsRes] = await Promise.all([
+        const [booksRes, staffRes, trendingRes, langsRes, catsRes] = await Promise.all([
           pb.collection("books").getList(1, 12, { filter: "is_published=true", sort: "-sales_count" }),
+          pb.collection("books").getList(1, 12, { filter: "is_published=true && is_staff_pick=true", sort: "-created" }),
+          pb.collection("trending_books").getList(1, 12, { expand: "book" }),
           pb.collection("languages").getFullList({ filter: "is_active=true", sort: "display_order" }),
           pb.collection("categories").getFullList({ sort: "name" })
         ]);
 
         setFeatured(booksRes.items as unknown as BookCardData[]);
-        setLangs(langsRes.map((l: any) => ({ ...l, book_count: l.book_count || 0 }))); // book_count might need a custom view or hook in future
+        setStaffPicks(staffRes.items as unknown as BookCardData[]);
+        setTrending(trendingRes.items.map(t => t.expand?.book).filter(Boolean) as unknown as BookCardData[]);
+        
+        setLangs(langsRes.map((l: any) => ({ ...l, book_count: l.book_count || 0 })));
         setCategories(catsRes as any[]);
       } catch (err) {
         console.error("Failed to fetch home data", err);
@@ -92,6 +99,50 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {featured.map((b) => (
+              <BookCard key={b.id} book={b} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Staff Picks shelf */}
+      <section className="theme-retro py-16 md:py-24 max-w-7xl mx-auto px-4 sm:px-6 border-t-[3px] border-border">
+        <div className="flex items-end justify-between mb-8">
+          <div>
+            <h2 className="font-comic text-4xl tracking-wide">Staff Picks</h2>
+            <p className="text-muted-foreground mt-2 font-mono text-sm">Curated favorites from our team</p>
+          </div>
+        </div>
+
+        {staffPicks.length === 0 ? (
+          <div className="border-[3px] border-dashed border-border rounded-lg bg-card/50 py-16 text-center">
+            <p className="text-muted-foreground">No staff picks yet.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {staffPicks.map((b) => (
+              <BookCard key={b.id} book={b} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Trending shelf */}
+      <section className="theme-retro py-16 md:py-24 max-w-7xl mx-auto px-4 sm:px-6 border-t-[3px] border-border">
+        <div className="flex items-end justify-between mb-8">
+          <div>
+            <h2 className="font-comic text-4xl tracking-wide">Trending Now</h2>
+            <p className="text-muted-foreground mt-2 font-mono text-sm">Hot reads from the last 30 days</p>
+          </div>
+        </div>
+
+        {trending.length === 0 ? (
+          <div className="border-[3px] border-dashed border-border rounded-lg bg-card/50 py-16 text-center">
+            <p className="text-muted-foreground">Trending data unavailable.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {trending.map((b) => (
               <BookCard key={b.id} book={b} />
             ))}
           </div>

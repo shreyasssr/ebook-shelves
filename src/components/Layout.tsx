@@ -1,5 +1,5 @@
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { BookOpen, ShoppingCart, User, LogOut, Search, Mail } from "lucide-react";
+import { Link, NavLink, Outlet, useNavigate, useSearchParams } from "react-router-dom";
+import { BookOpen, ShoppingCart, User, LogOut, Search, Mail, Filter } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
@@ -18,22 +18,36 @@ export default function Layout() {
   const { user, isAdmin, signOut } = useAuth();
   const { count } = useCart();
   const nav = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [langs, setLangs] = useState<{ code: string; name: string }[]>([]);
+  const [categories, setCategories] = useState<{ slug: string; name: string }[]>([]);
   const [q, setQ] = useState("");
 
+  const currentLang = searchParams.get("lang") || "all";
+  const currentCategory = searchParams.get("category");
+  const currentSort = searchParams.get("sort");
+
+  const setLanguage = (langCode: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (langCode === "all") next.delete("lang");
+    else next.set("lang", langCode);
+    setSearchParams(next);
+  };
+
   useEffect(() => {
-    async function loadLangs() {
+    async function loadData() {
       try {
-        const res = await pb.collection("languages").getFullList({
-          filter: "is_active=true",
-          sort: "display_order",
-        });
-        setLangs(res.map((l: any) => ({ code: l.code, name: l.name })));
+        const [langRes, catRes] = await Promise.all([
+          pb.collection("languages").getFullList({ filter: "is_active=true", sort: "display_order" }),
+          pb.collection("categories").getFullList({ sort: "name" })
+        ]);
+        setLangs(langRes.map((l: any) => ({ code: l.code, name: l.name })));
+        setCategories(catRes.map((c: any) => ({ slug: c.slug, name: c.name })));
       } catch (err) {
-        console.error("Failed to load languages", err);
+        console.error("Failed to load header data", err);
       }
     }
-    loadLangs();
+    loadData();
   }, []);
 
   return (
@@ -104,29 +118,63 @@ export default function Layout() {
           </nav>
         </div>
 
-        {/* Shelf strip — language pills, styled like little comic caption tags */}
+        {/* Shelf strip — Destinations, Categories, and Language Dropdown */}
         <div className="border-t-[3px] border-border bg-secondary/40">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex gap-2 overflow-x-auto text-sm">
-            <NavLink
-              to="/books"
-              end
-              className={({ isActive }) =>
-                `px-3 py-1 border-2 border-border font-medium whitespace-nowrap transition-colors ${
-                  isActive ? "bg-primary text-primary-foreground" : "bg-background hover:bg-muted"
-                }`
-              }
-            >
-              All
-            </NavLink>
-            {langs.map((l) => (
-              <NavLink
-                key={l.code}
-                to={`/books?lang=${l.code}`}
-                className="px-3 py-1 border-2 border-border bg-background hover:bg-muted whitespace-nowrap"
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex gap-4 items-center justify-between text-sm overflow-x-auto">
+            <div className="flex gap-2 items-center flex-nowrap">
+              <Link
+                to="/books?sort=new"
+                className={`px-3 py-1 border-2 border-border font-medium whitespace-nowrap transition-colors ${
+                  currentSort === "new" ? "bg-primary text-primary-foreground" : "bg-background hover:bg-muted"
+                }`}
               >
-                {l.name}
-              </NavLink>
-            ))}
+                New Arrivals
+              </Link>
+              <Link
+                to="/books?sort=bestseller"
+                className={`px-3 py-1 border-2 border-border font-medium whitespace-nowrap transition-colors ${
+                  currentSort === "bestseller" ? "bg-primary text-primary-foreground" : "bg-background hover:bg-muted"
+                }`}
+              >
+                Bestsellers
+              </Link>
+              
+              <div className="w-px h-5 bg-border mx-1"></div>
+              
+              <Link
+                to="/books"
+                className={`px-3 py-1 border-2 border-border font-medium whitespace-nowrap transition-colors ${
+                  !currentCategory && !currentSort ? "bg-primary text-primary-foreground" : "bg-background hover:bg-muted"
+                }`}
+              >
+                All Books
+              </Link>
+              {categories.map((c) => (
+                <Link
+                  key={c.slug}
+                  to={`/books?category=${c.slug}`}
+                  className={`px-3 py-1 border-2 border-border font-medium whitespace-nowrap transition-colors ${
+                    currentCategory === c.slug ? "bg-primary text-primary-foreground" : "bg-background hover:bg-muted"
+                  }`}
+                >
+                  {c.name}
+                </Link>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <Filter className="size-3.5 text-muted-foreground" />
+              <select
+                value={currentLang}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="bg-background border-2 border-border px-2 py-1 font-medium text-xs rounded-none cursor-pointer outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="all">Language: All</option>
+                {langs.map((l) => (
+                  <option key={l.code} value={l.code}>{l.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </header>

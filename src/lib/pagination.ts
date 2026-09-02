@@ -17,7 +17,7 @@ export interface PaginatedBook {
 export interface BookFilters {
   languageId?: string;
   categoryId?: string;
-  sort?:       "popular" | "newest" | "price-asc" | "price-desc";
+  sort?:       "popular" | "bestseller" | "new" | "newest" | "price-asc" | "price-desc";
   minPrice?:   number;
   maxPrice?:   number;
   searchTerm?: string;
@@ -25,6 +25,8 @@ export interface BookFilters {
 
 const sortMap: Record<string, string> = {
   "popular": "-sales_count",
+  "bestseller": "-sales_count",
+  "new": "-published_year,-created",
   "newest": "-created",
   "price-asc": "price",
   "price-desc": "-price"
@@ -56,11 +58,11 @@ export function usePaginatedBooks(filters: BookFilters = {}, pageSize = 24) {
       try {
         const filterParts = ["is_published=true"];
         
-        if (filters.languageId) filterParts.push(`language="${filters.languageId}"`);
-        if (filters.categoryId) filterParts.push(`category="${filters.categoryId}"`);
+        if (filters.languageId) filterParts.push(pb.filter("language={:lang}", { lang: filters.languageId }));
+        if (filters.categoryId) filterParts.push(pb.filter("category={:cat}", { cat: filters.categoryId }));
         if (filters.minPrice !== undefined) filterParts.push(`price >= ${filters.minPrice}`);
         if (filters.maxPrice !== undefined) filterParts.push(`price <= ${filters.maxPrice}`);
-        if (filters.searchTerm) filterParts.push(`name ~ "${filters.searchTerm}"`);
+        if (filters.searchTerm) filterParts.push(pb.filter("name ~ {:q}", { q: filters.searchTerm }));
 
         const result = await pb.collection("books").getList(page, pageSize, {
           filter: filterParts.join(" && "),
